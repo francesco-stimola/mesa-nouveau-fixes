@@ -8,7 +8,7 @@
 
 ### Hardware video decoding in Firefox on older NVIDIA GPUs
 
-**Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, and no GPU errors on video playback.**
+**Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, no GPU errors on video playback, and GTK 4 menus that draw correctly.**
 
 [![Checks](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml/badge.svg)](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml)
 [![Latest release](https://img.shields.io/github/v/release/francesco-stimola/mesa-nouveau-fixes?sort=semver&label=release)](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)
@@ -38,6 +38,13 @@ browsers never use it:
   Firefox does when a clip loops. The second decoder in a process fails with
   `-EEXIST`, and Firefox turns hardware decoding off for that video.
 
+Outside video, on GeForce 8 to 300 GPUs:
+
+- **GTK 4 menus and popovers are garbled.** With GTK's default renderer
+  (ngl), an open menu and the window behind it are drawn with each other's
+  projection, so their content appears shrunken or stretched. The usual
+  workaround is `GSK_RENDERER=gl`.
+
 ## Results
 
 Measured on a GeForce GT 240M (GT216, VP4), Mesa 25.2.8 as shipped by
@@ -56,6 +63,16 @@ The exported frames match software decoding: a frame shown by
 `mpv --hwdec=vaapi` differs from the software-decoded one by 0.05 on average
 on a 0–255 scale.
 
+Uniform buffer updates, same GPU, measured with
+[`tests/ubo-two-contexts.c`](tests/ubo-two-contexts.c) (20 batches, each
+ending with a readback):
+
+| | Mesa 25.2.8 | Mesa 25.2.8 + these patches |
+|---|---|---|
+| Two contexts, wrong readbacks | 40 of 40 | **0 of 40** |
+| One context orphaning its buffer, wrong readbacks | 20 of 20 | **0 of 20** |
+| Menus in Files (GTK 4.14, default renderer) | garbled | **correct** |
+
 ## Patches
 
 Each patch exists for Mesa 25.2 ([`patches/mesa-25.2`](patches/mesa-25.2),
@@ -67,6 +84,7 @@ for upstream review). They apply with `git am` or `patch -p1`.
 | **0001** nv50,nvc0: don't read pipe_surface templates as nv50_surface in clears | `SURF_HEIGHT_OVERRUN` traps at every video start; some fields never cleared | The VA frontend clears surfaces with plain `pipe_surface` templates. nv50 and nvc0 read driver fields past the end of the template, so the render target ends up 1 line high. | nv50 and nvc0 drivers |
 | **0002** frontends/va: export interlaced surfaces through a progressive copy | `vaExportSurfaceHandle` fails: Firefox decodes in software, `mpv --hwdec=vaapi` needs a conversion | No DRM PRIME layout describes a buffer whose fields sit in two layers | Every GPU nouveau decodes video on (VP2 to VP5) |
 | **0003** winsys/nouveau: pass the DRM fd when deleting subchannel objects | Hardware decoding stops when the player re-creates its decoder | Object deletion passes the channel id where the DRM fd belongs, so engine objects leak and the next one fails with `-EEXIST` | Every nouveau GPU, since Mesa 24.1 |
+| **0004** nv50: only push constant buffer updates through a current binding | GTK 4 menus drawn shrunken or stretched with the default renderer | Small uniform buffer updates go through a hardware binding point that can still point at the buffer's old storage, after the buffer was orphaned, or at another context's buffer | nv50 driver (GeForce 8 to 300 series) |
 
 0002 weaves the two fields into a progressive NV12 copy on the GPU when a
 surface is first exported, and refreshes the copy after every decode, video
@@ -104,6 +122,10 @@ LIBVA_DRIVERS_PATH=$PWD/out LIBVA_DRIVER_NAME=nouveau vainfo
 This driver supports Wayland and DRM displays, which is what Firefox and mpv
 use on a Wayland desktop. X11 applications need a full Mesa build, such as the
 planned Ubuntu package.
+
+0004 fixes the OpenGL driver, which the VA driver above does not replace. Its
+effect needs a full Mesa build; [`docs/TESTING.md`](docs/TESTING.md#7-uniform-buffer-updates-reach-their-buffer-0004)
+shows how to try one for a single program.
 
 Firefox reads VA drivers only from system directories inside its RDD sandbox.
 To test a driver from another directory, also set `MOZ_DISABLE_RDD_SANDBOX=1`

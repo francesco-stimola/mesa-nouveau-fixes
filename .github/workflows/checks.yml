@@ -52,3 +52,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: shellcheck -s sh scripts/*.sh
+
+  tests:
+    name: Reproducers build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl-dev libgles-dev
+          cc -O2 -Wall -Werror tests/ubo-two-contexts.c -o "$RUNNER_TEMP/ubo-two-contexts" -ldl

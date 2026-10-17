@@ -134,3 +134,50 @@ build a driver with 0001 and 0002 only: there the second decoder fails,
 `vaRenderPicture` returns `VA_STATUS_ERROR_ALLOCATION_FAILED` (visible with
 `LIBVA_TRACE=/tmp/vatrace/t`), and Firefox turns hardware decoding off. With
 all three patches every loop keeps `VA-API frame` lines coming.
+
+## 7. Uniform buffer updates reach their buffer (0004)
+
+0004 is in the OpenGL driver, so this check needs a Mesa build with EGL and
+OpenGL ES, not the VA driver. To try it on one program without replacing the
+system Mesa, build with a version suffix and load the two libraries through
+`LD_LIBRARY_PATH`:
+
+```sh
+cd mesa-25.2.8        # with the patches applied
+echo 25.2.8-nvfix > VERSION
+meson setup build -Dbuildtype=release -Dplatforms=wayland \
+      -Dgallium-drivers=nouveau -Dvulkan-drivers=[] -Dglvnd=enabled \
+      -Degl=enabled -Dgles2=enabled -Dglx=disabled -Dgallium-va=disabled \
+      -Dllvm=disabled
+ninja -C build
+mkdir -p $HOME/nvfix-gl
+cp build/src/egl/libEGL_mesa.so.0 build/src/gallium/targets/dri/libgallium-*.so $HOME/nvfix-gl/
+```
+
+Build and run the reproducer:
+
+```sh
+cc -O2 tests/ubo-two-contexts.c -o ubo-two-contexts -ldl
+./ubo-two-contexts 20 20 8 2 1
+./ubo-two-contexts 20 20 8 1 1
+LD_LIBRARY_PATH=$HOME/nvfix-gl ./ubo-two-contexts 20 20 8 2 1
+LD_LIBRARY_PATH=$HOME/nvfix-gl ./ubo-two-contexts 20 20 8 1 1
+```
+
+The first line printed names the driver: the patched one reports
+`Mesa 25.2.8-nvfix`. Stock Mesa gets every readback wrong: with two contexts
+each one shows the other's colour or black, and with one context it shows an
+older colour. The patched driver gets them all right.
+
+With GTK 4, open a menu in any application with the default renderer, for
+example the main menu in Files. Files keeps running in the background, so
+quit it first; otherwise the new window opens in the old process, with the
+old driver:
+
+```sh
+nautilus -q
+LD_LIBRARY_PATH=$HOME/nvfix-gl GSK_RENDERER=ngl nautilus
+```
+
+Stock Mesa draws the menu and the window behind it shrunken or stretched; the
+patched driver draws them like `GSK_RENDERER=gl` does.

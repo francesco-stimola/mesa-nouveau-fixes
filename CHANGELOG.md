@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0 - 2026-10-17
+
+- **0004** nv50: only push constant buffer updates through a current binding.
+  GTK 4 menus and popovers draw correctly with the default ngl renderer on
+  GeForce 8 to 300 GPUs, without `GSK_RENDERER=gl`.
+- [`tests/ubo-two-contexts.c`](tests/ubo-two-contexts.c) reproduces the bug
+  0004 fixes without GTK.
+
+The attached VA driver includes 0004, but its effect is in the OpenGL driver,
+which needs a full Mesa build.
+
 ## 1.0.0 - 2026-10-17
 
 First release. The patches exist for Mesa 25.2, as shipped by Ubuntu 24.04,

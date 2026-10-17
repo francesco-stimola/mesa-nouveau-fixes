@@ -10,6 +10,8 @@
 
 **Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, and no GPU errors on video playback.**
 
+[![Checks](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml/badge.svg)](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml)
+[![Latest release](https://img.shields.io/github/v/release/francesco-stimola/mesa-nouveau-fixes?sort=semver&label=release)](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Mesa](https://img.shields.io/badge/Mesa-25.2%20%7C%20main-green.svg)](#patches)
 
@@ -76,19 +78,32 @@ None of these patches has been merged into Mesa yet.
 ## Try it
 
 The patches touch the VA driver and the nouveau Gallium driver. For a quick
-test, build only the VA driver and load it for one program, leaving the system
-Mesa untouched. On Ubuntu 24.04, with `deb-src` entries enabled:
+test, load a patched VA driver for one program and leave the system Mesa
+untouched.
+
+**Prebuilt, for Ubuntu 24.04.** Each
+[release](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)
+has the driver attached, built from the Mesa source Ubuntu 24.04 ships:
+
+```sh
+tar xzf mesa-nouveau-fixes-*-va-driver-ubuntu-24.04.tar.gz
+cd mesa-nouveau-fixes-*-va-driver-ubuntu-24.04
+LIBVA_DRIVERS_PATH=$PWD LIBVA_DRIVER_NAME=nouveau vainfo
+LIBVA_DRIVERS_PATH=$PWD mpv --hwdec=vaapi video.mp4
+```
+
+**From source.** On Ubuntu 24.04, with `deb-src` entries enabled:
 
 ```sh
 sudo apt build-dep mesa
 apt source mesa
 ./scripts/build-va-driver.sh mesa-25.2.8 patches/mesa-25.2 out
 LIBVA_DRIVERS_PATH=$PWD/out LIBVA_DRIVER_NAME=nouveau vainfo
-LIBVA_DRIVERS_PATH=$PWD/out mpv --hwdec=vaapi video.mp4
 ```
 
-The same build runs in CI for every push; its output is attached to the
-workflow run.
+This driver supports Wayland and DRM displays, which is what Firefox and mpv
+use on a Wayland desktop. X11 applications need a full Mesa build, such as the
+planned Ubuntu package.
 
 Firefox reads VA drivers only from system directories inside its RDD sandbox.
 To test a driver from another directory, also set `MOZ_DISABLE_RDD_SANDBOX=1`

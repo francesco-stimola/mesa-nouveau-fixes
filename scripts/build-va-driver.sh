@@ -5,6 +5,9 @@
 #
 # usage: build-va-driver.sh <mesa-source-dir> <patch-dir> <output-dir>
 #
+# Set NVFIX_VERSION to append this project's version to the Mesa version
+# that vainfo reports, as in 25.2.8-nvfix-1.0.0.
+#
 # The source directory is left untouched: it is copied to
 # <output-dir>/src first. The driver ends up in
 # <output-dir>/nouveau_drv_video.so.
@@ -35,7 +38,7 @@ for p in "$patches"/*.patch; do
    patch -p1 --forward --no-backup-if-mismatch < "$p"
 done
 
-echo "$(cat VERSION)-nvfix" > VERSION
+echo "$(cat VERSION)-nvfix${NVFIX_VERSION:+-$NVFIX_VERSION}" > VERSION
 
 # Mesa 25.3 removed VDPAU.
 vdpau=

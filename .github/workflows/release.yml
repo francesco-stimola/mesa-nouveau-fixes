@@ -1,0 +1,69 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read the release notes
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          awk -v v="$version" '/^## / { p = ($2 == v) } p' CHANGELOG.md | tail -n +2 > "$RUNNER_TEMP/notes.md"
+          if [ ! -s "$RUNNER_TEMP/notes.md" ]; then
+            echo "CHANGELOG.md has no section for $version" >&2
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Enable source packages
+        run: |
+          sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+          sudo apt-get update
+
+      - name: Install build dependencies
+        run: sudo apt-get build-dep -y mesa
+
+      - name: Fetch Ubuntu's Mesa source
+        working-directory: ${{ runner.temp }}
+        run: |
+          apt-get source mesa
+          src=$(ls -d "$RUNNER_TEMP"/mesa-*/)
+          echo "MESA_SRC=$src" >> "$GITHUB_ENV"
+          echo "MESA_DEB=$(dpkg-parsechangelog -l "$src/debian/changelog" -S Version)" >> "$GITHUB_ENV"
+
+      - name: Build the patched VA driver
+        run: NVFIX_VERSION="$VERSION" ./scripts/build-va-driver.sh "$MESA_SRC" patches/mesa-25.2 "$RUNNER_TEMP/out"
+
+      - name: Package
+        run: |
+          cd "$RUNNER_TEMP"
+          name=mesa-nouveau-fixes-$VERSION-va-driver-ubuntu-24.04
+          mkdir -p dist "pkg/$name"
+          cp out/nouveau_drv_video.so "pkg/$name/"
+          {
+            echo "nouveau VA driver from mesa-nouveau-fixes $VERSION"
+            echo "Built from Ubuntu 24.04 mesa $MESA_DEB with patches/mesa-25.2"
+            echo "vainfo reports: Mesa Gallium driver $(cat out/src/VERSION)"
+          } > "pkg/$name/BUILD_INFO"
+          (cd "pkg/$name" && sha256sum nouveau_drv_video.so > SHA256SUMS)
+          tar -C pkg -czf "dist/$name.tar.gz" "$name"
+          tar -C "$GITHUB_WORKSPACE" -czf "dist/mesa-nouveau-fixes-$VERSION-patches.tar.gz" patches LICENSE
+          (cd dist && sha256sum ./*.tar.gz > SHA256SUMS)
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "mesa-nouveau-fixes $VERSION" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            "$RUNNER_TEMP"/dist/*

@@ -1,0 +1,54 @@
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ubuntu-24-04:
+    name: Patches apply to Ubuntu 24.04 Mesa
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch Ubuntu's Mesa source
+        working-directory: ${{ runner.temp }}
+        run: |
+          sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+          sudo apt-get update
+          apt-get source mesa
+          src=$(ls -d "$RUNNER_TEMP"/mesa-*/)
+          echo "Ubuntu mesa $(dpkg-parsechangelog -l "$src/debian/changelog" -S Version)"
+          echo "MESA_SRC=$src" >> "$GITHUB_ENV"
+
+      - name: Apply the patches
+        run: |
+          cd "$MESA_SRC"
+          for p in "$GITHUB_WORKSPACE"/patches/mesa-25.2/*.patch; do
+            echo "Applying $(basename "$p")"
+            patch -p1 --forward --no-backup-if-mismatch < "$p"
+          done
+
+  mesa-main:
+    name: Patches apply to Mesa main
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that the patches apply
+        run: |
+          git clone --depth 1 https://gitlab.freedesktop.org/mesa/mesa.git "$RUNNER_TEMP/mesa"
+          git -C "$RUNNER_TEMP/mesa" log -1 --format='Mesa main at %h (%cs)'
+          git -C "$RUNNER_TEMP/mesa" apply --check "$GITHUB_WORKSPACE"/patches/mesa-main/*.patch
+
+  scripts:
+    name: Shell scripts
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck -s sh scripts/*.sh

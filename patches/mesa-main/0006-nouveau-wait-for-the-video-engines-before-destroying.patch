@@ -1,0 +1,56 @@
+From 6fc4ee148e4f0c91e52bc86fba083ae8fbf7b07f Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Sat, 17 Oct 2026 20:55:35 +0200
+Subject: [PATCH 6/6] nouveau: wait for the video engines before destroying a
+ vp3 decoder
+
+nouveau_vp3_decoder_destroy deletes the engine objects and the channels
+right away, while BSP, VP and PPP may still be working through the last
+pictures: a player that stops after a few frames, or closes a video
+while it plays, destroys its decoder at that point. The kernel then
+fails to idle the channel ("failed to idle channel"), and the next
+decoder that binds the engines times out in g84_ectx_bind and hangs the
+GPU.
+
+Wait for every buffer the engines read or write before tearing them
+down.
+
+Tested on a GeForce GT 240M (VP4) with ffmpeg decoding through VA-API
+and quitting after a few frames: without this patch the first run left
+the channel busy, with it ten runs, quitting after 12 to 75 frames, were
+all clean.
+---
+ .../drivers/nouveau/nouveau_vp3_video.c        | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video.c b/src/gallium/drivers/nouveau/nouveau_vp3_video.c
+index 5130ed6..7753f22 100644
+--- a/src/gallium/drivers/nouveau/nouveau_vp3_video.c
++++ b/src/gallium/drivers/nouveau/nouveau_vp3_video.c
+@@ -205,8 +205,26 @@ static void
+ nouveau_vp3_decoder_destroy(struct pipe_video_codec *decoder)
+ {
+    struct nouveau_vp3_decoder *dec = (struct nouveau_vp3_decoder *)decoder;
++   struct nouveau_bo *engine_bos[] = {
++      dec->ref_bo, dec->bitplane_bo, dec->inter_bo[0], dec->inter_bo[1],
++   };
++   unsigned b;
+    int i;
+ 
++   /* The engines may still be working through the last pictures. If their
++    * objects and channels go away now, the kernel cannot idle the channel
++    * and the next decoder that binds the engines hangs the GPU. Every stage
++    * reads or writes one of these buffers, so wait for them first.
++    */
++   for (b = 0; b < ARRAY_SIZE(engine_bos); ++b) {
++      if (engine_bos[b])
++         nouveau_bo_wait(engine_bos[b], NOUVEAU_BO_RDWR, dec->client);
++   }
++   for (i = 0; i < NOUVEAU_VP3_VIDEO_QDEPTH; ++i) {
++      if (dec->bsp_bo[i])
++         nouveau_bo_wait(dec->bsp_bo[i], NOUVEAU_BO_RDWR, dec->client);
++   }
++
+    nouveau_bo_ref(NULL, &dec->ref_bo);
+    nouveau_bo_ref(NULL, &dec->bitplane_bo);
+    nouveau_bo_ref(NULL, &dec->inter_bo[0]);

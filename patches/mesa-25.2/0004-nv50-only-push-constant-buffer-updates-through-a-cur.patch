@@ -1,7 +1,7 @@
 From e4dc6a9ec2315b9b1778088c92316a8fb9caaf5b Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 13:41:26 +0200
-Subject: [PATCH 4/5] nv50: only push constant buffer updates through a current
+Subject: [PATCH 4/6] nv50: only push constant buffer updates through a current
  binding
 
 nv50_cb_push() writes small constant buffer updates with CB_ADDR and

@@ -14,11 +14,10 @@ with `LIBVA_DRIVERS_PATH=$NVFIX`.
 - **Clocks.** Set the highest performance level, see
   [GPU clocks](../README.md#gpu-clocks). At the boot level the decoder can be
   slower than the CPU and every comparison is skewed.
-- **One decoder at a time.** Do not run two hardware-decoding programs at
-  once: see [Known issues](../README.md#known-issues). Let every
-  hardware decode run to the end, too: a program that quits while the
-  decoder still works, such as `ffmpeg -frames:v`, can leave it hung, and
-  the next program that decodes freezes the GPU.
+- **Let stock Mesa finish every decode.** Without 0006, a program that quits
+  while the decoder still works, such as `ffmpeg -frames:v`, leaves it hung,
+  and the next program that decodes freezes the GPU. Test stock Mesa with
+  whole clips, and reboot after a `failed to idle channel` in the kernel log.
 - **Test videos within the decoder's limits.** VP4 is designed for H.264 High
   up to 1080p30. Encode test clips that match what websites serve, for example
   from Big Buck Bunny:
@@ -218,3 +217,19 @@ prediction, and how many frames each driver gets wrong; `-` means the GPU
 did not decode the stream. In our run, stock Mesa got 2884 frames wrong in
 50 of the 163 streams VP4 decodes, and the patched driver 653 in 13, none of
 them more wrong than before.
+
+## 9. A decoder stopped early leaves the GPU usable (0006)
+
+Without downloading frames, ffmpeg quits while the GPU still decodes the last
+ones, so the decoder is destroyed with work in flight:
+
+```sh
+LIBVA_DRIVERS_PATH=$NVFIX ffmpeg -hwaccel vaapi -hwaccel_output_format vaapi \
+       -i bbb-1080p30-5M.mp4 -frames:v 20 -f null -
+journalctl -k -n 20 | grep 'failed to idle'
+```
+
+Stock Mesa leaves `failed to idle channel` in the kernel log on the first
+try, and the next program that decodes freezes the GPU: reboot before
+decoding again. The patched driver leaves nothing, run after run, and two
+programs can decode at the same time.

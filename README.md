@@ -40,6 +40,10 @@ browsers never use it:
 - **Moving areas of some H.264 videos break into blocks.** On GeForce 9300
   and later, B frames that use temporal direct prediction, which YouTube's
   H.264 streams use in places, are decoded wrong in every player.
+- **Stopping a video can freeze the GPU.** A player that closes its decoder
+  while the GPU still works on the last frames leaves the kernel unable to
+  stop the decoder's channel (`failed to idle channel`), and the next video
+  that starts freezes the display.
 
 Outside video, on GeForce 8 to 300 GPUs:
 
@@ -114,6 +118,7 @@ upstream review). They apply with `git am` or `patch -p1`.
 | **0003** winsys/nouveau: pass the DRM fd when deleting subchannel objects | Hardware decoding stops when the player re-creates its decoder | Object deletion passes the channel id where the DRM fd belongs, so engine objects leak and the next one fails with `-EEXIST` | Every nouveau GPU, since Mesa 24.1 |
 | **0004** nv50: only push constant buffer updates through a current binding | GTK 4 menus drawn shrunken or stretched with the default renderer | Small uniform buffer updates go through a hardware binding point that can still point at the buffer's old storage, after the buffer was orphaned, or at another context's buffer | nv50 driver (GeForce 8 to 300 series) |
 | **0005** nouveau: keep H.264 references in the same VP slot | Blocks in moving areas of H.264 videos, spread by B frames used as references | The decoder names the pictures that stored motion vectors point to by their position in the reference list, and players reorder that list at every reference frame, so temporal direct prediction reads the wrong pictures | VP3 to VP5 (GeForce 9300 and 9400, GT 200 and 300 series, GeForce 400 to 700) |
+| **0006** nouveau: wait for the video engines before destroying a vp3 decoder | After a video stops early, the next one freezes the GPU | The decoder deletes its engine objects while the engines still work through the last pictures, and the kernel cannot idle the channel | VP3 to VP5 |
 
 0002 weaves the two fields into a progressive NV12 copy on the GPU when a
 surface is first exported, and refreshes the copy after every decode, video
@@ -221,11 +226,6 @@ the level at boot avoids both.
 
 ## Known issues
 
-- **Two programs decoding at once can hang the GPU.** When a second process
-  starts a hardware decoder while another one is decoding, the kernel driver
-  can time out in `g84_ectx_bind` and the display freezes. This happens with
-  the stock Mesa as well and needs a kernel fix. Until then, avoid
-  hardware-decoded playback in two programs at the same time.
 - **Video processing to three-plane formats swaps chroma.** Mesa's shader path
   writes U into the V plane when converting an interlaced surface to I420 or
   YV12, so the colours are wrong. With 0002, mpv no longer needs that
@@ -235,7 +235,7 @@ the level at boot avoids both.
 
 [`docs/TESTING.md`](docs/TESTING.md) lists the checks used for the results
 above: kernel traps, export with mpv, frame comparison with software decoding,
-and Firefox logs.
+H.264 conformance, decoders stopped early, and Firefox logs.
 
 ## License
 

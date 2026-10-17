@@ -9,6 +9,12 @@
   [`tests/h264-conformance.sh`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/h264-conformance.sh)
   compares every frame of FFmpeg's H.264 conformance streams with software
   decoding.
+- **0006** nouveau: wait for the video engines before destroying a vp3
+  decoder. Stopping a video while the GPU still decodes it no longer leaves
+  the decoder hung for the next one. This was also behind the GPU freezes
+  the README listed as "two programs decoding at once": with 0006, two
+  programs decode at the same time without problems, and that known issue
+  is gone.
 - **PPA.** [ppa:francesco-stimola/mesa-nouveau-fixes](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
   has the Mesa of Ubuntu 24.04 and 26.04 with the patches, for amd64 and
   i386. A daily workflow rebuilds it when Ubuntu updates Mesa

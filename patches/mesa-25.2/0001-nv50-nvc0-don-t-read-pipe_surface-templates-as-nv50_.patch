@@ -1,7 +1,7 @@
 From 5c1f1e720f0a4a414471130a724da563c14d78cb Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 11:28:18 +0200
-Subject: [PATCH 1/5] nv50,nvc0: don't read pipe_surface templates as
+Subject: [PATCH 1/6] nv50,nvc0: don't read pipe_surface templates as
  nv50_surface in clears
 
 pipe_video_buffer::get_surfaces() returns plain pipe_surface templates,

@@ -15,7 +15,10 @@ with `LIBVA_DRIVERS_PATH=$NVFIX`.
   [GPU clocks](../README.md#gpu-clocks). At the boot level the decoder can be
   slower than the CPU and every comparison is skewed.
 - **One decoder at a time.** Do not run two hardware-decoding programs at
-  once: see [Known issues](../README.md#known-issues).
+  once: see [Known issues](../README.md#known-issues). Let every
+  hardware decode run to the end, too: a program that quits while the
+  decoder still works, such as `ffmpeg -frames:v`, can leave it hung, and
+  the next program that decodes freezes the GPU.
 - **Test videos within the decoder's limits.** VP4 is designed for H.264 High
   up to 1080p30. Encode test clips that match what websites serve, for example
   from Big Buck Bunny:
@@ -181,3 +184,37 @@ LD_LIBRARY_PATH=$HOME/nvfix-gl GSK_RENDERER=ngl nautilus
 
 Stock Mesa draws the menu and the window behind it shrunken or stretched; the
 patched driver draws them like `GSK_RENDERER=gl` does.
+
+## 8. H.264 frames match software decoding (0005)
+
+H.264 decoding is exact: every correct decoder outputs the same pixels, so
+compare the MD5 of every frame decoded on the GPU with software decoding. The
+bug is in B slices with temporal direct prediction, which x264 uses only when
+asked, so encode a clip that uses it:
+
+```sh
+ffmpeg -i input.mp4 -an -vf scale=1280:720 -c:v libx264 -preset fast \
+       -profile:v high -direct-pred temporal -bf 3 -b:v 3M bbb-temporal.mp4
+ffmpeg -v error -i bbb-temporal.mp4 -pix_fmt nv12 -f framemd5 sw.md5
+LIBVA_DRIVERS_PATH=$NVFIX ffmpeg -v error -hwaccel vaapi -hwaccel_output_format vaapi \
+       -i bbb-temporal.mp4 -vf hwdownload,format=nv12 -f framemd5 hw.md5
+diff <(grep -v '^#' sw.md5 | cut -d, -f6) <(grep -v '^#' hw.md5 | cut -d, -f6) | grep -c '^>'
+```
+
+The last command prints how many frames differ. From a 10-second 1080p clip
+of Big Buck Bunny, the driver without 0005 gets 296 of 300 frames wrong; with
+0005 it gets none.
+
+[`tests/h264-conformance.sh`](../tests/h264-conformance.sh) runs the same
+comparison on FFmpeg's copy of the H.264 conformance streams, about 160 of
+them, for any number of VA drivers at once:
+
+```sh
+tests/h264-conformance.sh ~/h264-conformance system $NVFIX
+```
+
+Each row shows a stream, whether it uses field coding and temporal direct
+prediction, and how many frames each driver gets wrong; `-` means the GPU
+did not decode the stream. In our run, stock Mesa got 2884 frames wrong in
+50 of the 163 streams VP4 decodes, and the patched driver 653 in 13, none of
+them more wrong than before.

@@ -1,0 +1,109 @@
+From 3648bfed479ee10015779d63ecad1b83ce149062 Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Sat, 17 Oct 2026 19:31:43 +0200
+Subject: [PATCH 5/5] nouveau: keep H.264 references in the same VP slot
+
+VP3 to VP5 decode H.264 B slices with temporal direct prediction wrong
+whenever the list of reference pictures changes order.
+
+The VP picture parameters list the references in the order the frontend
+passes them, and a reference's position in that list, fifo_idx, also
+selects the address it is bound to. The motion vectors VP stores with a
+decoded picture name the pictures they point to by that index. Temporal
+direct prediction in a B slice reads the vectors of the colocated
+picture, so it finds the right pictures only if every reference still
+has the index it had when the colocated picture was decoded.
+
+Applications do not keep that order: ffmpeg lists the newest reference
+first, so every new reference moves the others one position down. B
+slices with temporal direct prediction then predict from the wrong
+pictures, which shows as blocks in moving areas, and B pictures used as
+references pass the errors on.
+
+Remember which picture each slot held for the previous picture, keep
+references in their slots and give new ones free slots. VP2 (nv84) has
+its own H.264 code and is not changed.
+
+Tested on a GeForce GT 240M (VP4), comparing the MD5 of every frame
+ffmpeg decodes through VA-API with software decoding. On eight clips,
+YouTube streams and x264 encodes, 1046 of 4804 frames differed before
+and none after. Of FFmpeg's H.264 conformance streams that VP4 decodes,
+36 of 163 improve, 35 of them to an exact match, and none gets worse;
+the frames still wrong are in streams with monochrome, cropping or field
+and MBAFF coding, as before.
+---
+ .../drivers/nouveau/nouveau_vp3_video.h       |  2 ++
+ .../drivers/nouveau/nouveau_vp3_video_vp.c    | 32 ++++++++++++++++---
+ 2 files changed, 29 insertions(+), 5 deletions(-)
+
+diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video.h b/src/gallium/drivers/nouveau/nouveau_vp3_video.h
+index e490807..47c555a 100644
+--- a/src/gallium/drivers/nouveau/nouveau_vp3_video.h
++++ b/src/gallium/drivers/nouveau/nouveau_vp3_video.h
+@@ -110,6 +110,8 @@ struct nouveau_vp3_decoder {
+       unsigned decoded_bottom : 1;
+       unsigned decoded_first : 1;
+    } refs[17];
++   /* H.264 reference pictures by fifo_idx - 1, as the last picture used them */
++   struct nouveau_vp3_video_buffer *h264_refs[16];
+    unsigned fence_seq, fw_sizes, last_frame_num, tmp_stride, ref_stride;
+ 
+    unsigned bsp_idx, vp_idx, ppp_idx;
+diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
+index d35ac31..acac5d3 100644
+--- a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
++++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
+@@ -235,7 +235,7 @@ nouveau_vp3_fill_picparm_h264_vp(struct nouveau_vp3_decoder *dec,
+                                  char *map)
+ {
+    struct h264_picparm_vp stub_h = {}, *h = &stub_h;
+-   unsigned ring, i, j = 0;
++   unsigned ring, i, j, num_refs, slot[16];
+    assert(offsetof(struct h264_picparm_vp, u224) == 0x224);
+    *is_ref = d->is_reference;
+    dec->last_frame_num = d->frame_num;
+@@ -277,10 +277,33 @@ nouveau_vp3_fill_picparm_h264_vp(struct nouveau_vp3_decoder *dec,
+    memcpy(h->m4x4, d->pps->ScalingList4x4, sizeof(h->m4x4));
+    memcpy(h->m8x8, d->pps->ScalingList8x8, sizeof(h->m8x8));
+    h->u220 = 0;
+-   for (i = 0; i < d->num_ref_frames; ++i) {
+-      if (!d->ref[i])
+-         break;
++
++   /* The motion vectors VP stores with a picture name the pictures they
++    * point to by fifo_idx. Temporal direct prediction in B slices reads the
++    * vectors of the colocated picture, so these names must still point to
++    * the same pictures: a reference keeps its fifo_idx for as long as it is
++    * one. Applications may reorder the reference list at every picture
++    * (ffmpeg puts the newest reference first), so keep each reference in
++    * the slot it had for the previous picture and put new ones in free
++    * slots.
++    */
++   for (num_refs = 0; num_refs < d->num_ref_frames && d->ref[num_refs]; ++num_refs) {
++      for (j = 0; j < 16 && dec->h264_refs[j] != (void *)d->ref[num_refs]; ++j);
++      slot[num_refs] = j;
++      if (j < 16)
++         refs[j] = dec->h264_refs[j];
++   }
++   for (i = 0; i < num_refs; ++i) {
++      if (slot[i] < 16)
++         continue;
++      for (j = 0; refs[j]; ++j);
++      slot[i] = j;
+       refs[j] = (struct nouveau_vp3_video_buffer *)d->ref[i];
++   }
++   memcpy(dec->h264_refs, refs, sizeof(dec->h264_refs));
++
++   for (i = 0; i < num_refs; ++i) {
++      j = slot[i];
+       h->refs[j].fifo_idx = j + 1;
+       h->refs[j].tmp_idx = refs[j]->valid_ref;
+       assert(dec->refs[refs[j]->valid_ref].vidbuf == refs[j]);
+@@ -301,7 +324,6 @@ nouveau_vp3_fill_picparm_h264_vp(struct nouveau_vp3_decoder *dec,
+          dec->refs[refs[j]->valid_ref].decoded_bottom && d->bottom_is_reference[i] ?
+          1 + d->is_long_term[i] : 0;
+       h->refs[j].pad = 0;
+-      j++;
+    }
+    for (; i < 16; ++i)
+       assert(!d->ref[i]);

@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - run: shellcheck -s sh scripts/*.sh
+      - run: shellcheck -s sh scripts/*.sh tests/*.sh
 
   tests:
     name: Reproducers build

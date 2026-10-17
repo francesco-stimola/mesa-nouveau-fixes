@@ -37,6 +37,9 @@ browsers never use it:
 - **Hardware decoding is lost when the player re-creates its decoder**, as
   Firefox does when a clip loops. The second decoder in a process fails with
   `-EEXIST`, and Firefox turns hardware decoding off for that video.
+- **Moving areas of some H.264 videos break into blocks.** On GeForce 9300
+  and later, B frames that use temporal direct prediction, which YouTube's
+  H.264 streams use in places, are decoded wrong in every player.
 
 Outside video, on GeForce 8 to 300 GPUs:
 
@@ -62,6 +65,19 @@ Ubuntu 24.04, Firefox 158, GPU at its highest performance level
 The exported frames match software decoding: a frame shown by
 `mpv --hwdec=vaapi` differs from the software-decoded one by 0.05 on average
 on a 0–255 scale.
+
+Every frame decoded on the same GPU, compared with software decoding by MD5
+([how](docs/TESTING.md#8-h264-frames-match-software-decoding-0005)). H.264
+decoding is exact, so a correct decoder differs on no frame:
+
+| | Mesa 25.2.8 | Mesa 25.2.8 + these patches |
+|---|---|---|
+| Big Buck Bunny from YouTube, H.264 720p60, 0:50–1:15 | 143 of 1501 frames differ | **none** |
+| Sintel and Tears of Steel from YouTube, H.264 1080p, 25 s each | 13 of 1202 frames differ | **none** |
+| FFmpeg's H.264 conformance streams that VP4 decodes | 2884 frames in 50 of 163 streams differ | **653 frames in 13 streams** |
+
+The 13 conformance streams still wrong use monochrome video, cropping, or
+field and MBAFF coding; each one was at least as wrong before.
 
 Uniform buffer updates, same GPU, measured with
 [`tests/ubo-two-contexts.c`](tests/ubo-two-contexts.c) (20 batches, each
@@ -97,6 +113,7 @@ upstream review). They apply with `git am` or `patch -p1`.
 | **0002** frontends/va: export interlaced surfaces through a progressive copy | `vaExportSurfaceHandle` fails: Firefox decodes in software, `mpv --hwdec=vaapi` needs a conversion | No DRM PRIME layout describes a buffer whose fields sit in two layers | Every GPU nouveau decodes video on (VP2 to VP5) |
 | **0003** winsys/nouveau: pass the DRM fd when deleting subchannel objects | Hardware decoding stops when the player re-creates its decoder | Object deletion passes the channel id where the DRM fd belongs, so engine objects leak and the next one fails with `-EEXIST` | Every nouveau GPU, since Mesa 24.1 |
 | **0004** nv50: only push constant buffer updates through a current binding | GTK 4 menus drawn shrunken or stretched with the default renderer | Small uniform buffer updates go through a hardware binding point that can still point at the buffer's old storage, after the buffer was orphaned, or at another context's buffer | nv50 driver (GeForce 8 to 300 series) |
+| **0005** nouveau: keep H.264 references in the same VP slot | Blocks in moving areas of H.264 videos, spread by B frames used as references | The decoder names the pictures that stored motion vectors point to by their position in the reference list, and players reorder that list at every reference frame, so temporal direct prediction reads the wrong pictures | VP3 to VP5 (GeForce 9300 and 9400, GT 200 and 300 series, GeForce 400 to 700) |
 
 0002 weaves the two fields into a progressive NV12 copy on the GPU when a
 surface is first exported, and refreshes the copy after every decode, video

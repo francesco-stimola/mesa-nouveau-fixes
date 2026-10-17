@@ -2,6 +2,13 @@
 
 ## 1.2.0 - Unreleased
 
+- **0005** nouveau: keep H.264 references in the same VP slot. Moving
+  areas of H.264 videos no longer break into blocks on GPUs with VP3 to VP5
+  (GeForce 9300 and later): B frames with temporal direct prediction now
+  match software decoding frame for frame.
+  [`tests/h264-conformance.sh`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/h264-conformance.sh)
+  compares every frame of FFmpeg's H.264 conformance streams with software
+  decoding.
 - **PPA.** [ppa:francesco-stimola/mesa-nouveau-fixes](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
   has the Mesa of Ubuntu 24.04 and 26.04 with the patches, for amd64 and
   i386. A daily workflow rebuilds it when Ubuntu updates Mesa
@@ -9,7 +16,7 @@
   [`scripts/ppa-upload.sh`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/scripts/ppa-upload.sh)).
 - **Mesa 26.0.** [`patches/mesa-26.0`](https://github.com/francesco-stimola/mesa-nouveau-fixes/tree/main/patches/mesa-26.0)
   has the patches for Mesa 26.0, as shipped by Ubuntu 26.04. 0002 calls
-  26.0's video processing interface; the other three are unchanged. They
+  26.0's video processing interface; the others are unchanged. They
   are build-tested only: the results in the README were measured with Mesa
   25.2. The checks now build the VA driver from each PPA series' Mesa.
 - **Setup guide.** [`docs/SETUP.md`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/SETUP.md)

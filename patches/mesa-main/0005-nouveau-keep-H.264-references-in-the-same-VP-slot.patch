@@ -1,4 +1,4 @@
-From 3648bfed479ee10015779d63ecad1b83ce149062 Mon Sep 17 00:00:00 2001
+From da9b0c567e575ef8dc8417c14fa87a2839b760d8 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 19:31:43 +0200
 Subject: [PATCH 5/6] nouveau: keep H.264 references in the same VP slot
@@ -50,7 +50,7 @@ index e490807..47c555a 100644
  
     unsigned bsp_idx, vp_idx, ppp_idx;
 diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
-index d35ac31..acac5d3 100644
+index d35ac31..237f9e1 100644
 --- a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
 +++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
 @@ -235,7 +235,7 @@ nouveau_vp3_fill_picparm_h264_vp(struct nouveau_vp3_decoder *dec,
@@ -58,7 +58,7 @@ index d35ac31..acac5d3 100644
  {
     struct h264_picparm_vp stub_h = {}, *h = &stub_h;
 -   unsigned ring, i, j = 0;
-+   unsigned ring, i, j, num_refs, slot[16];
++   unsigned ring, i, j = 0, num_refs, slot[16];
     assert(offsetof(struct h264_picparm_vp, u224) == 0x224);
     *is_ref = d->is_reference;
     dec->last_frame_num = d->frame_num;

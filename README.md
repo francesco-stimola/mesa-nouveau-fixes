@@ -73,6 +73,17 @@ ending with a readback):
 | One context orphaning its buffer, wrong readbacks | 20 of 20 | **0 of 20** |
 | Menus in Files (GTK 4.14, default renderer) | garbled | **correct** |
 
+The same scripted GTK 4 session with both drivers, GTK's default renderer
+([how it is made](assets/src/gtk-menus)):
+
+<p align="center">
+  <img src="assets/gtk-menus.gif" width="100%"
+       alt="A GTK 4 window with its main menu open. With stock Mesa the menu is drawn tiny in a corner and parts of the window are stretched; with the patches both are drawn correctly.">
+</p>
+
+At every step the window and the menu change together, which is when the bug
+strikes. In everyday use the glitches come and go.
+
 ## Patches
 
 Each patch exists for Mesa 25.2 ([`patches/mesa-25.2`](patches/mesa-25.2),

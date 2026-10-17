@@ -2,3 +2,4 @@
 # Patches are applied byte for byte: never touch their line endings.
 *.patch -text
 *.png binary
+*.gif binary

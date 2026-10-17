@@ -7,6 +7,7 @@
   GeForce 8 to 300 GPUs, without `GSK_RENDERER=gl`.
 - [`tests/ubo-two-contexts.c`](tests/ubo-two-contexts.c) reproduces the bug
   0004 fixes without GTK.
+- The README shows the GTK fix in a before/after GIF.
 
 The attached VA driver includes 0004, but its effect is in the OpenGL driver,
 which needs a full Mesa build.

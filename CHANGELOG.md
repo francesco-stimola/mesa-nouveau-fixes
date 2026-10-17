@@ -4,8 +4,10 @@
 
 - **0005** nouveau: keep H.264 references in the same VP slot. Moving
   areas of H.264 videos no longer break into blocks on GPUs with VP3 to VP5
-  (GeForce 9300 and later): B frames with temporal direct prediction now
-  match software decoding frame for frame.
+  decoders: B frames with temporal direct prediction now match software
+  decoding frame for frame.
+- **Which GPUs need which patches.** A table in the README maps GPU
+  families and models to their video engine and to the patches that apply.
   [`tests/h264-conformance.sh`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/h264-conformance.sh)
   compares every frame of FFmpeg's H.264 conformance streams with software
   decoding.

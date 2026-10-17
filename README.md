@@ -15,7 +15,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Mesa](https://img.shields.io/badge/Mesa-25.2%20%7C%2026.0%20%7C%20main-green.svg)](#patches)
 
-[The problem](#the-problem) · [Results](#results) · [Patches](#patches) · [Install](#install) · [Setup](#setup) · [Known issues](#known-issues)
+[The problem](#the-problem) · [Results](#results) · [Patches](#patches) · [GPUs](#which-gpus-need-which-patches) · [Install](#install) · [Setup](#setup) · [Known issues](#known-issues)
 
 </div>
 
@@ -37,9 +37,10 @@ browsers never use it:
 - **Hardware decoding is lost when the player re-creates its decoder**, as
   Firefox does when a clip loops. The second decoder in a process fails with
   `-EEXIST`, and Firefox turns hardware decoding off for that video.
-- **Moving areas of some H.264 videos break into blocks.** On GeForce 9300
-  and later, B frames that use temporal direct prediction, which YouTube's
-  H.264 streams use in places, are decoded wrong in every player.
+- **Moving areas of some H.264 videos break into blocks.** On GPUs with VP3
+  to VP5 decoders ([which ones](#which-gpus-need-which-patches)), B frames
+  that use temporal direct prediction, which YouTube's H.264 streams use in
+  places, are decoded wrong in every player.
 - **Stopping a video can freeze the GPU.** A player that closes its decoder
   while the GPU still works on the last frames leaves the kernel unable to
   stop the decoder's channel (`failed to idle channel`), and the next video
@@ -117,7 +118,7 @@ upstream review). They apply with `git am` or `patch -p1`.
 | **0002** frontends/va: export interlaced surfaces through a progressive copy | `vaExportSurfaceHandle` fails: Firefox decodes in software, `mpv --hwdec=vaapi` needs a conversion | No DRM PRIME layout describes a buffer whose fields sit in two layers | Every GPU nouveau decodes video on (VP2 to VP5) |
 | **0003** winsys/nouveau: pass the DRM fd when deleting subchannel objects | Hardware decoding stops when the player re-creates its decoder | Object deletion passes the channel id where the DRM fd belongs, so engine objects leak and the next one fails with `-EEXIST` | Every nouveau GPU, since Mesa 24.1 |
 | **0004** nv50: only push constant buffer updates through a current binding | GTK 4 menus drawn shrunken or stretched with the default renderer | Small uniform buffer updates go through a hardware binding point that can still point at the buffer's old storage, after the buffer was orphaned, or at another context's buffer | nv50 driver (GeForce 8 to 300 series) |
-| **0005** nouveau: keep H.264 references in the same VP slot | Blocks in moving areas of H.264 videos, spread by B frames used as references | The decoder names the pictures that stored motion vectors point to by their position in the reference list, and players reorder that list at every reference frame, so temporal direct prediction reads the wrong pictures | VP3 to VP5 (GeForce 9300 and 9400, GT 200 and 300 series, GeForce 400 to 700) |
+| **0005** nouveau: keep H.264 references in the same VP slot | Blocks in moving areas of H.264 videos, spread by B frames used as references | The decoder names the pictures that stored motion vectors point to by their position in the reference list, and players reorder that list at every reference frame, so temporal direct prediction reads the wrong pictures | VP3 to VP5 |
 | **0006** nouveau: wait for the video engines before destroying a vp3 decoder | After a video stops early, the next one freezes the GPU | The decoder deletes its engine objects while the engines still work through the last pictures, and the kernel cannot idle the channel | VP3 to VP5 |
 
 0002 weaves the two fields into a progressive NV12 copy on the GPU when a
@@ -126,6 +127,28 @@ processing or `vaPutImage` into that surface. Drivers that decode into
 progressive buffers never take that path.
 
 None of these patches has been merged into Mesa yet.
+
+### Which GPUs need which patches
+
+nouveau decodes video with a different engine on each GPU generation. The
+nouveau chipset (in brackets) is what `vainfo` prints after "for", for
+example `NVA5`.
+
+| GPUs | Examples | Video engine | Codecs | 0001 | 0002 | 0003 | 0004 | 0005 | 0006 |
+|---|---|---|---|:-:|:-:|:-:|:-:|:-:|:-:|
+| G80 (NV50) | GeForce 8800 GTX, 8800 GTS 320/640 | VP1, not supported by nouveau | – | | | | ✓ | | |
+| G84–G96, GT200 (NV84–NVA0) | GeForce 8400 GS (first version), 8500 GT, 8600, 8800 GT, 9400 GT–9800 GTX, GTS 250, GTX 260–295, 8400M–9800M | VP2 | H.264, MPEG-2 | ✓ | ✓ | ✓ | ✓ | | |
+| G98, MCP77–MCP7A (NV98, NVAA, NVAC) | GeForce 8400 GS (later versions), 9300 GS, 9200M GS, 9300M GS; integrated GeForce 8200, 8300, 9300, 9400 and ION | VP3 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| GT215–GT218, MCP89 (NVA3, NVA5, NVA8, NVAF) | GeForce 210, GT 220, GT 240, 310, 315, G 210M, GT 230M–GT 335M, 320M | VP4 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| GF100–GF116 (NVC0–NVCF) | GeForce 400 series, most of the 500 series | VP4 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | | ✓ | ✓ |
+| GF117, GF119, Kepler (NVD7, NVD9, NVE4–NV108) | GeForce GT 520, GT 610, Kepler models of the 600 and 700 series such as GT 710, GT 730, GTX 660, GTX 770 | VP5 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | | ✓ | ✓ |
+| Maxwell and later (NV117 on) | GeForce GTX 745, 750, 750 Ti and later | not supported by nouveau | – | | | | | | |
+
+0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
+with or without video decoding. 0003 changes code every nouveau GPU runs;
+the failure it fixes shows up when a program re-creates a video decoder.
+Some GeForce 600 and 700 models use Fermi or Maxwell chips: check the
+chipset `vainfo` prints.
 
 ## Install
 

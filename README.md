@@ -15,7 +15,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Mesa](https://img.shields.io/badge/Mesa-25.2%20%7C%20main-green.svg)](#patches)
 
-[The problem](#the-problem) · [Results](#results) · [Patches](#patches) · [Try it](#try-it) · [Requirements](#requirements) · [Known issues](#known-issues)
+[The problem](#the-problem) · [Results](#results) · [Patches](#patches) · [Install](#install) · [Setup](#setup) · [Known issues](#known-issues)
 
 </div>
 
@@ -104,7 +104,23 @@ progressive buffers never take that path.
 
 None of these patches has been merged into Mesa yet.
 
-## Try it
+## Install
+
+On Ubuntu 24.04 and distributions based on it (Zorin OS 18, Linux Mint 22),
+the [PPA](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
+has Ubuntu's own Mesa with these patches, for amd64 and i386:
+
+```sh
+sudo add-apt-repository ppa:francesco-stimola/mesa-nouveau-fixes
+sudo apt update
+sudo apt upgrade
+```
+
+Then install the firmware, set up Firefox and fix the GPU clocks, as
+[Setup](#setup) describes. [`docs/SETUP.md`](docs/SETUP.md) also explains how
+to go back to Ubuntu's Mesa.
+
+## Try it without installing
 
 The patches touch the VA driver and the nouveau Gallium driver. For a quick
 test, load a patched VA driver for one program and leave the system Mesa
@@ -131,8 +147,7 @@ LIBVA_DRIVERS_PATH=$PWD/out LIBVA_DRIVER_NAME=nouveau vainfo
 ```
 
 This driver supports Wayland and DRM displays, which is what Firefox and mpv
-use on a Wayland desktop. X11 applications need a full Mesa build, such as the
-planned Ubuntu package.
+use on a Wayland desktop. X11 applications need the full Mesa from the PPA.
 
 0004 fixes the OpenGL driver, which the VA driver above does not replace. Its
 effect needs a full Mesa build; [`docs/TESTING.md`](docs/TESTING.md#7-uniform-buffer-updates-reach-their-buffer-0004)
@@ -140,26 +155,29 @@ shows how to try one for a single program.
 
 Firefox reads VA drivers only from system directories inside its RDD sandbox.
 To test a driver from another directory, also set `MOZ_DISABLE_RDD_SANDBOX=1`
-for that run only. A packaged build that replaces the system Mesa is planned
-(Ubuntu PPA).
+for that run only. The PPA installs the driver in the system directories, so
+Firefox needs neither variable.
 
-## Requirements
+## Setup
 
-**Firmware.** nouveau needs the video firmware NVIDIA ships inside its 340.xx
-driver. This repository does not contain it: extract it with
-[envytools](https://github.com/envytools/envytools/tree/master/vp) and copy the
-files to `/lib/firmware/nouveau`. `vainfo` then lists the H.264, MPEG-2 and
-VC-1 profiles.
+Besides the patched Mesa, a working system needs three things.
+[`docs/SETUP.md`](docs/SETUP.md) walks through all of them, with scripts:
 
-**Firefox.** Firefox blocks VA-API on NVIDIA GPUs. Set
-`media.hardware-video-decoding.force-enabled` to `true` in `about:config`.
-Snap and Flatpak builds bring their own Mesa: use a build that runs on the
-system Mesa, such as the Mozilla `.deb`.
+- **Firmware.** nouveau needs the video firmware inside NVIDIA's 340.108
+  driver, which only NVIDIA may distribute.
+  [`scripts/install-firmware.sh`](scripts/install-firmware.sh) downloads the
+  driver from nvidia.com, checks it and extracts the firmware with envytools.
+- **Firefox.** Use Mozilla's `.deb`: the Snap and Flatpak builds bring their
+  own Mesa. Firefox blocks VA-API on NVIDIA GPUs until
+  `media.hardware-video-decoding.force-enabled` is true;
+  [`scripts/setup-firefox.sh`](scripts/setup-firefox.sh) sets it for every
+  profile.
+- **GPU clocks**, below.
 
-**Formats.** These decoders handle H.264, MPEG-2 and VC-1 only. VP4 (GT21x)
-is designed for H.264 High up to 1080p30 (level 4.1); 1080p60 is beyond it.
-Sites that serve VP9 or AV1 need an H.264-only setting, such as the
-enhanced-h264ify extension for YouTube.
+These decoders handle H.264, MPEG-2 and VC-1 only. VP4 (GT21x) is designed for
+H.264 High up to 1080p30 (level 4.1); 1080p60 is beyond it. Sites that serve
+VP9 or AV1 need an H.264-only setting, such as the enhanced-h264ify extension
+for YouTube.
 
 ### GPU clocks
 
@@ -169,14 +187,19 @@ the decoder may be slower than the CPU, and the patches look as if they did
 nothing. Check the current level, marked with `*`, as root:
 
 ```sh
-cat /sys/kernel/debug/dri/*/pstate
+sudo cat /sys/kernel/debug/dri/*/pstate
 ```
 
-To switch at runtime, write a level from that list, for example
-`echo 0f > /sys/kernel/debug/dri/<card>/pstate`. To set it at every boot, add
-`nouveau.config=NvClkMode=0xf` to the kernel command line, using the highest
-level your GPU lists. Manual levels work on Tesla (GeForce 8 to 300) and most
-Kepler GPUs.
+Set the fastest level at every boot with the kernel parameter
+`nouveau.config=NvClkMode=0xf`, using the highest level your GPU lists; see
+[SETUP](docs/SETUP.md#4-gpu-clocks). Levels can be changed on Tesla (GeForce 8
+to 300) and most Kepler GPUs.
+
+Do not change levels while the desktop runs. Writing a level to the `pstate`
+file works most of the time, but on a GeForce GT 240M switching between levels
+when the screen went off and on twice left the GPU broken: once it hung at
+once, once it kept failing every frame of the desktop until it hung. Setting
+the level at boot avoids both.
 
 ## Known issues
 

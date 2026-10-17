@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.0 - Unreleased
+
+- **PPA.** [ppa:francesco-stimola/mesa-nouveau-fixes](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
+  has Ubuntu 24.04's Mesa with the patches, for amd64 and i386. A daily
+  workflow rebuilds it when Ubuntu updates Mesa
+  ([`ppa/series`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/ppa/series),
+  [`scripts/ppa-upload.sh`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/scripts/ppa-upload.sh)).
+- **Setup guide.** [`docs/SETUP.md`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/SETUP.md)
+  covers everything besides Mesa: `scripts/install-firmware.sh` extracts the
+  video firmware from NVIDIA's driver, `scripts/setup-firefox.sh` enables
+  hardware decoding in Firefox for every profile, and the GPU clocks are set
+  at boot.
+- **GPU clocks.** Changing the performance level while the desktop runs hung
+  or broke a GeForce GT 240M in tests: the README now says to set it at boot
+  only.
+
 ## 1.1.0 - 2026-10-17
 
 - **0004** nv50: only push constant buffer updates through a current binding.

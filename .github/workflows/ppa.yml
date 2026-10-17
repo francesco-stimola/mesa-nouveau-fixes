@@ -1,0 +1,104 @@
+name: PPA
+
+# Keeps ppa:francesco-stimola/mesa-nouveau-fixes in step with Ubuntu: every
+# day, for each series in ppa/series, it rebuilds Ubuntu's newest Mesa with
+# the patches and uploads it when Ubuntu has moved on. Run it by hand to
+# upload a new +nvfixN after the patches change.
+#
+# The signing key lives in the "ppa" environment, which only main can use.
+
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+    inputs:
+      series:
+        description: Ubuntu series to build (empty for all in ppa/series)
+        default: ''
+      rebuild:
+        description: Upload a new +nvfixN even if Ubuntu's Mesa has not changed
+        type: boolean
+        default: false
+      dry_run:
+        description: Build and sign, but do not upload
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ppa
+  cancel-in-progress: false
+
+jobs:
+  series:
+    name: Read ppa/series
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: read
+        env:
+          ONLY: ${{ inputs.series }}
+        run: |
+          matrix=$(grep -v '^#' ppa/series | awk -v only="$ONLY" '
+            NF == 2 && (only == "" || $1 == only) {
+              printf "%s{\"series\":\"%s\",\"patches\":\"%s\"}", sep, $1, $2; sep = ","
+            }')
+          if [ -z "$matrix" ]; then
+            echo "No series to build" >&2
+            exit 1
+          fi
+          echo "matrix={\"include\":[$matrix]}" >> "$GITHUB_OUTPUT"
+
+  upload:
+    name: ${{ matrix.series }}
+    needs: series
+    runs-on: ubuntu-24.04
+    environment: ppa
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.series.outputs.matrix) }}
+    container: ubuntu:${{ matrix.series }}
+    steps:
+      - name: Install the packaging tools
+        run: |
+          sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            ca-certificates curl jq git gnupg devscripts dput quilt dpkg-dev xz-utils
+
+      - uses: actions/checkout@v4
+
+      - name: Build, sign and upload
+        env:
+          SERIES: ${{ matrix.series }}
+          PATCHES: patches/${{ matrix.patches }}
+          MODE: ${{ inputs.rebuild && 'rebuild' || 'auto' }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}
+          SIGN_KEY: 2CBE5BAC5D6898AE2C8C39D6981DDFA12CDB08A7
+          KEY: ${{ secrets.PPA_GPG_KEY }}
+          PASSPHRASE: ${{ secrets.PPA_GPG_PASSPHRASE }}
+        run: |
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          mkdir -m 700 "$GNUPGHOME"
+          printf '%s\n' "$KEY" | gpg --batch --quiet --import
+          printf '%s' "$PASSPHRASE" > "$RUNNER_TEMP/passphrase"
+          chmod 600 "$RUNNER_TEMP/passphrase"
+          export GPG_PASSPHRASE_FILE="$RUNNER_TEMP/passphrase"
+          ./scripts/ppa-upload.sh "$SERIES" "$PATCHES"
+
+  keepalive:
+    # GitHub disables scheduled workflows in public repositories after 60
+    # days without commits. Re-enabling the workflow through the API keeps
+    # the daily check running.
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/$GITHUB_REPOSITORY/actions/workflows/ppa.yml/enable"

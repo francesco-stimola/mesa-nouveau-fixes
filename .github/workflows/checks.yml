@@ -14,7 +14,7 @@ jobs:
     name: Patches apply to Ubuntu 24.04 Mesa
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Fetch Ubuntu's Mesa source
         working-directory: ${{ runner.temp }}
@@ -38,7 +38,7 @@ jobs:
     name: Patches apply to Mesa main
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check that the patches apply
         run: |
@@ -50,14 +50,14 @@ jobs:
     name: Shell scripts
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: shellcheck -s sh scripts/*.sh
 
   tests:
     name: Reproducers build
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           sudo apt-get update
           sudo apt-get install -y libegl-dev libgles-dev

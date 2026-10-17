@@ -38,7 +38,7 @@ jobs:
     outputs:
       matrix: ${{ steps.read.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: read
         env:
           ONLY: ${{ inputs.series }}
@@ -70,7 +70,7 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
             ca-certificates curl jq git gnupg devscripts dput quilt dpkg-dev xz-utils
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build, sign and upload
         env:

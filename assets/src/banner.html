@@ -1,0 +1,96 @@
+<!doctype html>
+<!--
+  Source of assets/logo-light.png and assets/logo-dark.png (2560x400).
+  Render with a headless Chromium, once per theme:
+    msedge --headless --hide-scrollbars --default-background-color=00000000
+           --window-size=2560,400 --screenshot=logo-light.png "banner.html"
+    msedge ... --screenshot=logo-dark.png "banner.html?theme=dark"
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>mesa-nouveau-fixes banner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600&family=JetBrains+Mono:wght@700&display=block" rel="stylesheet">
+<style>
+  :root {
+    --ink: #17202a;
+    --accent: #1f8a55;
+    --muted: #5b6b7c;
+  }
+  :root[data-theme="dark"] {
+    --ink: #e9eef4;
+    --accent: #34b073;
+    --muted: #8a9bb0;
+  }
+  html, body {
+    margin: 0;
+    width: 2560px;
+    height: 400px;
+    background: transparent;
+    overflow: hidden;
+  }
+  .banner {
+    display: flex;
+    align-items: center;
+    gap: 78px;
+    height: 400px;
+    padding-left: 478px;
+  }
+  .icon {
+    width: 256px;
+    height: 256px;
+    flex: none;
+  }
+  .wordmark {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    font-size: 117px;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .wordmark span {
+    color: var(--accent);
+  }
+  .tagline {
+    margin-top: 34px;
+    font-family: "Barlow", sans-serif;
+    font-weight: 600;
+    font-size: 46px;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<div class="banner">
+  <svg class="icon" viewBox="0 0 256 256" aria-hidden="true">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#2fae6e"/>
+        <stop offset="1" stop-color="#156b40"/>
+      </linearGradient>
+    </defs>
+    <rect width="256" height="256" rx="56" fill="url(#bg)"/>
+    <g fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+      <!-- GPU die -->
+      <rect x="66" y="66" width="124" height="124" rx="18"/>
+      <!-- pins -->
+      <path d="M100 66V44M128 66V44M156 66V44M100 212V190M128 212V190M156 212V190
+               M66 100H44M66 128H44M66 156H44M212 100H190M212 128H190M212 156H190"/>
+    </g>
+    <!-- play: video decoded on the GPU -->
+    <path d="M112 100 L158 128 L112 156 Z" fill="#fff" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
+  </svg>
+  <div>
+    <div class="wordmark">mesa-nouveau<span>-fixes</span></div>
+    <div class="tagline">DECODE · WEAVE · EXPORT</div>
+  </div>
+</div>
+<script>
+  if (new URLSearchParams(location.search).get("theme") === "dark")
+    document.documentElement.dataset.theme = "dark";
+</script>
+</body>
+</html>

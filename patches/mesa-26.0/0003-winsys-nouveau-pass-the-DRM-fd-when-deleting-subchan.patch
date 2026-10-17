@@ -1,0 +1,44 @@
+From 43731f6b0a3cfeda5f3afb382e4ac424fd398914 Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Sat, 17 Oct 2026 12:21:58 +0200
+Subject: [PATCH 3/4] winsys/nouveau: pass the DRM fd when deleting subchannel
+ objects
+
+nouveau_object_subchan_del() hands obj->parent->handle, the channel id,
+to drmCommandWrite() where the DRM file descriptor belongs. The NVIF
+delete then goes to whichever file has that number in the process, and
+the engine object stays alive in the kernel.
+
+The kernel keys these objects by their userspace address, so the next
+object allocated at the same address fails with -EEXIST. With video
+decoding this happens as soon as a decoder is destroyed and a new one
+is created in the same process: on nv98 the PDEC engine object fails,
+vaRenderPicture returns VA_STATUS_ERROR_ALLOCATION_FAILED, and Firefox
+turns hardware decoding off as soon as a clip loops.
+
+Fixes: 821f4c8d99a3 ("nouveau: import libdrm_nouveau")
+---
+ src/gallium/winsys/nouveau/drm/nouveau.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/gallium/winsys/nouveau/drm/nouveau.c b/src/gallium/winsys/nouveau/drm/nouveau.c
+index 0903f7b..0b11e35 100644
+--- a/src/gallium/winsys/nouveau/drm/nouveau.c
++++ b/src/gallium/winsys/nouveau/drm/nouveau.c
+@@ -229,6 +229,7 @@ nouveau_object_channel_del(struct nouveau_object *obj)
+ static void
+ nouveau_object_subchan_del(struct nouveau_object *obj)
+ {
++   struct nouveau_drm *drm = nouveau_drm(obj->parent);
+    struct {
+       struct nvif_ioctl_v0 ioctl;
+       struct nvif_ioctl_del del;
+@@ -242,7 +243,7 @@ nouveau_object_subchan_del(struct nouveau_object *obj)
+       },
+    };
+ 
+-   drmCommandWrite(obj->parent->handle, DRM_NOUVEAU_NVIF, &args, sizeof(args));
++   drmCommandWrite(drm->fd, DRM_NOUVEAU_NVIF, &args, sizeof(args));
+ }
+ 
+ static void

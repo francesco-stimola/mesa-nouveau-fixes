@@ -10,29 +10,51 @@ permissions:
   contents: read
 
 jobs:
-  ubuntu-24-04:
-    name: Patches apply to Ubuntu 24.04 Mesa
+  series:
+    name: Read ppa/series
     runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
     steps:
+      - uses: actions/checkout@v7
+      - id: read
+        run: |
+          matrix=$(grep -v '^#' ppa/series | awk '
+            NF == 2 {
+              printf "%s{\"series\":\"%s\",\"patches\":\"%s\"}", sep, $1, $2; sep = ","
+            }')
+          echo "matrix={\"include\":[$matrix]}" >> "$GITHUB_OUTPUT"
+
+  ubuntu:
+    # The same Mesa source the PPA builds: Ubuntu's, with Ubuntu's own
+    # patches applied. The VA driver compiles every file the patches touch.
+    name: Patches build with Ubuntu ${{ matrix.series }} Mesa
+    needs: series
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.series.outputs.matrix) }}
+    container: ubuntu:${{ matrix.series }}
+    steps:
+      - name: Install the build dependencies
+        run: |
+          sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get build-dep -y mesa
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends dpkg-dev patch
+
       - uses: actions/checkout@v7
 
       - name: Fetch Ubuntu's Mesa source
         working-directory: ${{ runner.temp }}
         run: |
-          sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
-          sudo apt-get update
           apt-get source mesa
           src=$(ls -d "$RUNNER_TEMP"/mesa-*/)
           echo "Ubuntu mesa $(dpkg-parsechangelog -l "$src/debian/changelog" -S Version)"
           echo "MESA_SRC=$src" >> "$GITHUB_ENV"
 
-      - name: Apply the patches
-        run: |
-          cd "$MESA_SRC"
-          for p in "$GITHUB_WORKSPACE"/patches/mesa-25.2/*.patch; do
-            echo "Applying $(basename "$p")"
-            patch -p1 --forward --no-backup-if-mismatch < "$p"
-          done
+      - name: Build the patched VA driver
+        run: ./scripts/build-va-driver.sh "$MESA_SRC" "patches/${{ matrix.patches }}" "$RUNNER_TEMP/out"
 
   mesa-main:
     name: Patches apply to Mesa main

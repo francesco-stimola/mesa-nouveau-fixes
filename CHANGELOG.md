@@ -3,10 +3,15 @@
 ## 1.2.0 - Unreleased
 
 - **PPA.** [ppa:francesco-stimola/mesa-nouveau-fixes](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
-  has Ubuntu 24.04's Mesa with the patches, for amd64 and i386. A daily
-  workflow rebuilds it when Ubuntu updates Mesa
+  has the Mesa of Ubuntu 24.04 and 26.04 with the patches, for amd64 and
+  i386. A daily workflow rebuilds it when Ubuntu updates Mesa
   ([`ppa/series`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/ppa/series),
   [`scripts/ppa-upload.sh`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/scripts/ppa-upload.sh)).
+- **Mesa 26.0.** [`patches/mesa-26.0`](https://github.com/francesco-stimola/mesa-nouveau-fixes/tree/main/patches/mesa-26.0)
+  has the patches for Mesa 26.0, as shipped by Ubuntu 26.04. 0002 calls
+  26.0's video processing interface; the other three are unchanged. They
+  are build-tested only: the results in the README were measured with Mesa
+  25.2. The checks now build the VA driver from each PPA series' Mesa.
 - **Setup guide.** [`docs/SETUP.md`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/SETUP.md)
   covers everything besides Mesa: `scripts/install-firmware.sh` extracts the
   video firmware from NVIDIA's driver, `scripts/setup-firefox.sh` enables

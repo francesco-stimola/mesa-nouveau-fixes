@@ -1,4 +1,6 @@
 # Ubuntu series built for the PPA, and the patch directory each one uses.
-# The patches depend on the Mesa version the series ships, not on the
-# series itself: point a series at the directory for its Mesa.
+# Only LTS releases. The patches depend on the Mesa version the series
+# ships, not on the series itself: point a series at the directory for its
+# Mesa.
 noble mesa-25.2
+resolute mesa-26.0

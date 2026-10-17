@@ -1,8 +1,9 @@
 # Setup
 
 What a GeForce 8 to 700 GPU on nouveau needs for hardware video decoding in
-Firefox and a glitch-free GTK 4 desktop, on Ubuntu 24.04 and distributions
-based on it (Zorin OS 18, Linux Mint 22, ...), Wayland session.
+Firefox and a glitch-free GTK 4 desktop, on Ubuntu 24.04 or 26.04 and
+distributions based on them (Zorin OS 18, Linux Mint 22, ...), Wayland
+session.
 
 1. [Mesa with the patches](#1-mesa-with-the-patches)
 2. [Video firmware](#2-video-firmware)

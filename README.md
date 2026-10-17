@@ -13,7 +13,7 @@
 [![Checks](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml/badge.svg)](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml)
 [![Latest release](https://img.shields.io/github/v/release/francesco-stimola/mesa-nouveau-fixes?sort=semver&label=release)](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Mesa](https://img.shields.io/badge/Mesa-25.2%20%7C%20main-green.svg)](#patches)
+[![Mesa](https://img.shields.io/badge/Mesa-25.2%20%7C%2026.0%20%7C%20main-green.svg)](#patches)
 
 [The problem](#the-problem) · [Results](#results) · [Patches](#patches) · [Install](#install) · [Setup](#setup) · [Known issues](#known-issues)
 
@@ -87,8 +87,9 @@ strikes. In everyday use the glitches come and go.
 ## Patches
 
 Each patch exists for Mesa 25.2 ([`patches/mesa-25.2`](patches/mesa-25.2),
-what Ubuntu 24.04 ships) and for Mesa main ([`patches/mesa-main`](patches/mesa-main),
-for upstream review). They apply with `git am` or `patch -p1`.
+what Ubuntu 24.04 ships), Mesa 26.0 ([`patches/mesa-26.0`](patches/mesa-26.0),
+Ubuntu 26.04) and Mesa main ([`patches/mesa-main`](patches/mesa-main), for
+upstream review). They apply with `git am` or `patch -p1`.
 
 | Patch | Symptom | Cause | GPUs |
 |---|---|---|---|
@@ -106,8 +107,8 @@ None of these patches has been merged into Mesa yet.
 
 ## Install
 
-On Ubuntu 24.04 and distributions based on it (Zorin OS 18, Linux Mint 22),
-the [PPA](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
+On Ubuntu 24.04 and 26.04 and distributions based on them (Zorin OS 18,
+Linux Mint 22, ...), the [PPA](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
 has Ubuntu's own Mesa with these patches, for amd64 and i386:
 
 ```sh

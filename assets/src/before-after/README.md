@@ -1,7 +1,7 @@
 # Before/after GIFs
 
-How the GIFs in the README's [Before and after](../../../README.md#before-and-after)
-section were made, on a GeForce GT 240M with Ubuntu's Mesa 25.2.8. "Without"
+How the GIFs in the README's [Fixes](../../../README.md#fixes) section were
+made, on a GeForce GT 240M with Ubuntu's Mesa 25.2.8. "Without"
 is a VA driver built with [`scripts/build-va-driver.sh`](../../../scripts/build-va-driver.sh)
 from every patch but that one; "with" is built from all of them.
 

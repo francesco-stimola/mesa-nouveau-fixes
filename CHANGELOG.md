@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **README.** Each fix now has one place: a short description with its
+  before/after GIF, grouped by what users see. The results are one table,
+  the patch table shows which ones are in review upstream, and the GPU
+  table has a row per patch, so new patches add rows instead of columns.
+  Two badges show the versions the PPA has now for Ubuntu 24.04 and 26.04.
+
 ## 1.3.0 - 2026-10-18
 
 - **0007** vl/compositor: render the V plane with its own gfx shaders. VA

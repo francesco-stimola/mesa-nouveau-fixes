@@ -13,6 +13,10 @@
 #
 # Every GPU decode runs alone and to the end of the stream: on nouveau,
 # a decoder stopped half way can leave the video engine hung.
+#
+# Both decodes keep the whole coded picture (-apply_cropping 0): ffmpeg
+# cannot crop the top or the left of frames it downloads from the GPU, so
+# streams that crop would look wrong.
 
 set -u
 
@@ -47,11 +51,11 @@ md5s() {
 
 gpu() {
 	if [ "$2" = system ]; then
-		ffmpeg -nostdin -v error -f h264 -hwaccel vaapi -hwaccel_output_format vaapi -i "$1" \
-			-an -vf hwdownload,format=nv12 -f framemd5 - 2> /dev/null
-	else
-		LIBVA_DRIVERS_PATH=$2 ffmpeg -nostdin -v error -f h264 -hwaccel vaapi -hwaccel_output_format vaapi \
+		ffmpeg -nostdin -v error -apply_cropping 0 -f h264 -hwaccel vaapi -hwaccel_output_format vaapi \
 			-i "$1" -an -vf hwdownload,format=nv12 -f framemd5 - 2> /dev/null
+	else
+		LIBVA_DRIVERS_PATH=$2 ffmpeg -nostdin -v error -apply_cropping 0 -f h264 -hwaccel vaapi \
+			-hwaccel_output_format vaapi -i "$1" -an -vf hwdownload,format=nv12 -f framemd5 - 2> /dev/null
 	fi
 }
 
@@ -71,7 +75,8 @@ while read -r f; do
 	echo "$trace" | grep -q 'frame_mbs_only_flag .* = 1$' || coded=field
 	temporal=$(echo "$trace" | grep -c 'direct_spatial_mv_pred_flag .* = 0$')
 
-	ffmpeg -nostdin -v error -f h264 -i "$name" -an -pix_fmt nv12 -f framemd5 - 2> /dev/null | md5s > "$name.cpu"
+	ffmpeg -nostdin -v error -apply_cropping 0 -f h264 -i "$name" -an -pix_fmt nv12 -f framemd5 - 2> /dev/null |
+		md5s > "$name.cpu"
 	printf '%-30s %6s %5s %8s' "$name" "$(wc -l < "$name.cpu")" "$coded" "$temporal"
 	for d in $drivers; do
 		gpu "$name" "$d" | md5s > "$name.gpu"

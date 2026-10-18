@@ -1,0 +1,7 @@
+$ MOZ_LOG=FFmpegVideo:5 firefox video.mp4
+VA-API FFmpeg init successful
+! GetVAAPISurfaceDescriptor(): vaExportSurfaceHandle failed
+! FFmpegVideoDecoder, init, IsHardwareAccelerated=false
+! slow decode: failed to decode in time (decoded late 1)
+! slow decode: failed to decode in time (decoded late 2)
+# in 20 s: 0 frames decoded on the GPU, 472 on the CPU

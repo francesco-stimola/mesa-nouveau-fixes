@@ -1,0 +1,7 @@
+# two players closed while decoding, kernel log of 17 Oct 2026:
+! mpv[47731]: failed to idle channel 10 [mpv[47731]]
+! WARNING: nvkm/engine/fifo/g84.c:132 at g84_ectx_bind+0x408
+! mpv[47930]: failed to idle channel 10 [mpv[47930]]
+! mpv[47957]: failed to idle channel 12 [mpv[47957]]
+! WARNING: nvkm/engine/fifo/g84.c:132 at g84_ectx_bind+0x408
+# the GPU stays hung until a reboot

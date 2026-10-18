@@ -1,0 +1,9 @@
+$ mpv --hwdec=vaapi-copy video.mp4
+$ journalctl -k | grep nouveau
+! gr: TRAP_PROP - TP 0 - 00000008 [SURF_HEIGHT_OVERRUN] - Address 00000
+! gr: TRAP_PROP - TP 0 - e0c: 00000000, e18: 00000000, e1c: 00040000
+! gr: TRAP_PROP - TP 1 - 00000008 [SURF_HEIGHT_OVERRUN] - Address 00000
+! gr: TRAP_PROP - TP 1 - e0c: 00000000, e18: 00000000, e1c: 00040000
+! gr: TRAP_PROP - TP 0 - 00000008 [SURF_HEIGHT_OVERRUN] - Address 00000
+! gr: TRAP_PROP - TP 1 - 00000008 [SURF_HEIGHT_OVERRUN] - Address 00000
+# 35 kernel messages every time a video starts

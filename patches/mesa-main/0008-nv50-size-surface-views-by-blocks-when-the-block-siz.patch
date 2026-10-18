@@ -1,0 +1,51 @@
+From d67261bc4c9dcc49b6294087747e5b278ae1e17f Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Sun, 18 Oct 2026 16:57:07 +0200
+Subject: [PATCH 08/10] nv50: size surface views by blocks when the block size
+ differs
+
+The VA frontend clears YUYV and UYVY video buffers, whose R8G8_R8B8 and
+G8R8_B8R8 resources hold two pixels per block, through RGBA8 surfaces.
+nv50_surface_from_miptree takes the surface size from the resource in
+pixels, so the render target comes out twice as wide as the buffer.
+Since clears no longer read their surface templates as nv50_surface,
+they cover the whole render target and write past the end of the
+buffer: RT_FAULT traps with PAGE_NOT_PRESENT whenever a program creates
+such a surface, as mpv does when it probes formats.
+
+Convert the size to blocks of the view format when the block sizes
+differ, as radeonsi does.
+
+Tested on a GeForce GT 240M: with the previous patches, uploading a
+YUYV or UYVY frame through VA left 3 RT_FAULT lines in the kernel log,
+starting mpv --hwdec=vaapi 6, and mpv --vo=dmabuf-wayland 54. With this
+patch there are none, and the uploaded frames still read back
+unchanged.
+---
+ src/gallium/drivers/nouveau/nv50/nv50_miptree.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/src/gallium/drivers/nouveau/nv50/nv50_miptree.c b/src/gallium/drivers/nouveau/nv50/nv50_miptree.c
+index bcd6e6a..ffd0ece 100644
+--- a/src/gallium/drivers/nouveau/nv50/nv50_miptree.c
++++ b/src/gallium/drivers/nouveau/nv50/nv50_miptree.c
+@@ -485,6 +485,19 @@ nv50_surface_from_miptree(struct nv50_miptree *mt,
+    ns->depth = ps->last_layer - ps->first_layer + 1;
+    ns->offset = mt->level[templ->level].offset;
+ 
++   /* A view in a format with another block size, such as RGBA8 on a
++    * subsampled R8G8_R8B8 video buffer, covers the same blocks.
++    */
++   if (util_format_get_blockwidth(ps->format) !=
++       util_format_get_blockwidth(mt->base.base.format) ||
++       util_format_get_blockheight(ps->format) !=
++       util_format_get_blockheight(mt->base.base.format)) {
++      ns->width = util_format_get_nblocksx(mt->base.base.format, ns->width) *
++                  util_format_get_blockwidth(ps->format);
++      ns->height = util_format_get_nblocksy(mt->base.base.format, ns->height) *
++                   util_format_get_blockheight(ps->format);
++   }
++
+    ns->width <<= mt->ms_x;
+    ns->height <<= mt->ms_y;
+ 

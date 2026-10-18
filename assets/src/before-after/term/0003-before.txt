@@ -1,0 +1,7 @@
+$ MOZ_LOG=FFmpegVideo:5 firefox loop.html   # 10 s clip, looping
++ IsHardwareAccelerated=true
++ VA-API frame (x300)
+End of stream.   # the clip loops: new decoder
+! IsHardwareAccelerated=false
+! FFmpeg decoder init successful.   # software
+# in 38 s: 300 frames on the GPU, then 569 on the CPU

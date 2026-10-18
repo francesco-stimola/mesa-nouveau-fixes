@@ -1,0 +1,3 @@
+$ ffmpeg -vf format=yuyv422,hwupload ...   # as mpv does at start
+$ journalctl -k | grep nouveau
++ (no messages)

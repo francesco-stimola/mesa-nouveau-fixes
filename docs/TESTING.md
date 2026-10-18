@@ -214,9 +214,9 @@ tests/h264-conformance.sh ~/h264-conformance system $NVFIX
 
 Each row shows a stream, whether it uses field coding and temporal direct
 prediction, and how many frames each driver gets wrong; `-` means the GPU
-did not decode the stream. In our run, stock Mesa got 2884 frames wrong in
-50 of the 163 streams VP4 decodes, and the patched driver 653 in 13, none of
-them more wrong than before.
+did not decode the stream. In our run, stock Mesa got 2834 frames wrong in
+49 of the 163 streams VP4 decodes, and the patched driver 50, all in
+`slice2_field_aurora4`.
 
 ## 9. A decoder stopped early leaves the GPU usable (0006)
 
@@ -263,3 +263,44 @@ LIBVA_DRIVERS_PATH=$NVFIX ffmpeg -v info -init_hw_device vaapi=va:/dev/dri/rende
 The GPU converts colours a little differently from ffmpeg, so no plane is
 exact. Stock Mesa gives `v:` around 7 dB; with 0007 `v:` is level with `u:`
 (24 dB in our runs).
+
+## 11. YUYV and UYVY surfaces leave no GPU traps (0008)
+
+In one terminal:
+
+```sh
+journalctl -kf | grep --line-buffered -E 'RT_FAULT|trapped write'
+```
+
+In another, upload a few YUYV frames and read them back, without decoding
+anything:
+
+```sh
+LIBVA_DRIVERS_PATH=$NVFIX ffmpeg -v error -init_hw_device vaapi=va:/dev/dri/renderD128 \
+       -filter_hw_device va -f lavfi -i testsrc2=size=1280x720:rate=30 \
+       -vf format=yuyv422,hwupload,hwdownload,format=yuyv422 -frames:v 5 -f framemd5 -
+```
+
+Stock Mesa logs nothing here, because its clears never cover these
+surfaces (the bug 0001 fixes). A driver built with 0001 but without 0008
+logs `TRAP_PROP ... RT_FAULT` and `trapped write ... PAGE_NOT_PRESENT` for
+every surface; `format=uyvy422` does the same. mpv creates such surfaces
+when it starts with `--hwdec=vaapi`, to learn which formats it can upload:
+6 lines with that driver. The fully patched driver logs none, and the MD5s
+match those of the same command without `hwupload,hwdownload,`.
+
+## 12. Monochrome H.264 decodes (0009)
+
+Run [`tests/h264-conformance.sh`](../tests/h264-conformance.sh) as in
+check 8 and look at the two monochrome streams, `FRext_HPCAMOLQ_BRCM_B` and
+`FRext_HPCVMOLQ_BRCM_B`. Stock Mesa gets all 100 frames of each wrong:
+the pictures do not show the stream at all. The patched driver gets none
+wrong.
+
+## 13. Interlaced H.264 with MBAFF decodes (0010)
+
+In the same output, nine streams enable MBAFF and also code field pictures:
+`CAPAMA3_Sand_F`, `CVMAPAQP3_Sony_E`, `MR9_BT_B`, `cama1_vtc_c`,
+`cama2_vtc_b`, `cama3_vtc_b`, `FRext_FRExt2_Panasonic`,
+`FRext_FRExt4_Panasonic` and `FRext_HPCAMAPALQ_BRCM_B`. Stock Mesa gets 375
+of their frames wrong, the patched driver none.

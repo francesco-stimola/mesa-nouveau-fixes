@@ -1,0 +1,8 @@
+$ MOZ_LOG=FFmpegVideo:5 firefox loop.html   # 10 s clip, looping
++ IsHardwareAccelerated=true
++ VA-API frame (x300)
+End of stream.   # the clip loops: new decoder
++ VA-API frame (x300)
+End of stream.
++ VA-API frame (x300)
+# in 38 s: 1040 frames on the GPU, 0 on the CPU

@@ -8,6 +8,28 @@
   the V plane got U. Converted frames now match software decoding on every
   plane ([check 10](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/TESTING.md#10-conversion-to-three-plane-formats-keeps-the-colours-0007)).
   The known issue in the README is gone.
+- **0008** nv50: size surface views by blocks when the block size differs.
+  Since 0001, clears of YUYV and UYVY surfaces covered twice the buffer's
+  width and wrote past its end: `RT_FAULT` traps in the kernel log whenever
+  a program created such surfaces, 6 lines each time mpv started with
+  `--hwdec=vaapi`. Stock Mesa does not show them, because its clears never
+  reach these surfaces. Now there are none.
+- **0009** nouveau: pass chroma_format_idc to the vp3 H.264 decoder.
+  Monochrome H.264 decodes on VP3 to VP5; before, none of its frames came
+  out.
+- **0010** nouveau: tell the vp3 H.264 decoder whether a picture is MBAFF.
+  Interlaced H.264 that mixes field pictures with MBAFF frames, as TV
+  broadcasts do, no longer decodes into blocks and garbage on VP3 to VP5.
+- **H.264 conformance.** With all the patches, 1 of the 163 streams VP4
+  decodes still differs from software decoding, by 50 frames, against 49
+  streams and 2834 frames with stock Mesa; the README explains the one
+  left. [`tests/h264-conformance.sh`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/h264-conformance.sh)
+  now compares whole coded pictures (`-apply_cropping 0`): ffmpeg cannot
+  crop the top or left of frames it downloads from the GPU, so
+  `CVFC1_Sony_C`, which crops, counted as wrong for every driver.
+- **Before and after.** The README shows every fix in a GIF, with a driver
+  that has all the patches but that one and with one that has all of them
+  ([how they are made](https://github.com/francesco-stimola/mesa-nouveau-fixes/tree/main/assets/src/before-after)).
 
 ## 1.2.0 - 2026-10-18
 

@@ -1,0 +1,51 @@
+From b4e59e5869459fd9972190a5250167ee99ef6a4f Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Sun, 18 Oct 2026 17:30:06 +0200
+Subject: [PATCH 10/10] nouveau: tell the vp3 H.264 decoder whether a picture
+ is MBAFF
+
+BSP and VP take mb_adaptive_frame_field_flag from the SPS, but MBAFF
+only applies to frame pictures: the field pictures of a stream that
+enables it are not MBAFF coded. The decoder reads them as if they were,
+so streams that mix field pictures and MBAFF frames, as interlaced
+broadcasts do, decode into blocks and garbage.
+
+Pass MbaffFrameFlag instead: the SPS flag for frames, 0 for fields.
+
+Tested on a GeForce GT 240M with the H.264 conformance suite: the nine
+streams that enable MBAFF and code field pictures, such as
+CAPAMA3_Sand_F and HPCAMAPALQ_BRCM_B, had 353 wrong frames and now
+match software decoding frame for frame. No other stream changed.
+---
+ src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c | 3 ++-
+ src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c  | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
+index bed5d08..fa04557 100644
+--- a/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
++++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
+@@ -222,7 +222,8 @@ nouveau_vp3_fill_picparm_h264_bsp(struct nouveau_vp3_decoder *dec,
+    h->deblocking_filter_control_present_flag = d->pps->deblocking_filter_control_present_flag;
+    h->redundant_pic_cnt_present_flag = d->pps->redundant_pic_cnt_present_flag;
+    h->transform_8x8_mode_flag = d->pps->transform_8x8_mode_flag;
+-   h->mb_adaptive_frame_field_flag = d->pps->sps->mb_adaptive_frame_field_flag;
++   h->mb_adaptive_frame_field_flag = d->pps->sps->mb_adaptive_frame_field_flag &&
++                                     !d->field_pic_flag;
+    h->field_pic_flag = d->field_pic_flag;
+    h->bottom_field_flag = d->bottom_field_flag;
+    memset(h->real_pad, 0, sizeof(h->real_pad));
+diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
+index 57a027b..3f120e4 100644
+--- a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
++++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
+@@ -333,7 +333,8 @@ nouveau_vp3_fill_picparm_h264_vp(struct nouveau_vp3_decoder *dec,
+    nouveau_vp3_inter_sizes(dec, d->slice_count, &ring, &h->bucket_size, &h->inter_ring_data_size);
+ 
+    h->u220 = 0;
+-   h->mb_adaptive_frame_field_flag = d->pps->sps->mb_adaptive_frame_field_flag;
++   h->mb_adaptive_frame_field_flag = d->pps->sps->mb_adaptive_frame_field_flag &&
++                                     !d->field_pic_flag;
+    h->direct_8x8_inference_flag = d->pps->sps->direct_8x8_inference_flag;
+    h->weighted_pred_flag = d->pps->weighted_pred_flag;
+    h->constrained_intra_pred_flag = d->pps->constrained_intra_pred_flag;

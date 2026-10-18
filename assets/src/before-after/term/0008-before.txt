@@ -1,0 +1,7 @@
+$ ffmpeg -vf format=yuyv422,hwupload ...   # as mpv does at start
+$ journalctl -k | grep nouveau
+! gr: TRAP_PROP - TP 0 - 00000040 [RT_FAULT] - Address 0020470000
+! gr: TRAP_PROP - TP 1 - 00000040 [RT_FAULT] - Address 0020471000
+! gr: 00200000 [] ch 7 [003f342000 ffmpeg[65737]] subc 3 class 8597
+! fb: trapped write at 0020471000 on channel 7 ... [PAGE_NOT_PRESENT]
+# 12 kernel messages for every YUYV or UYVY surface

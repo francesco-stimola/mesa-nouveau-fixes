@@ -1,0 +1,5 @@
+$ ffmpeg -hwaccel vaapi -i video.mp4 -frames:v 20 -f null -
+$ ffmpeg -hwaccel vaapi -i video.mp4 -frames:v 20 -f null -
+$ journalctl -k | grep nouveau
++ (no messages)
+# every decode stopped early, the next one runs normally

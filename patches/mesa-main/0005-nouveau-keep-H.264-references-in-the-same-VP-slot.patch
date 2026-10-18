@@ -1,7 +1,7 @@
 From 704e563d07f959cc49f4220d8a5b39aa2593e8e7 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 19:31:43 +0200
-Subject: [PATCH 5/7] nouveau: keep H.264 references in the same VP slot
+Subject: [PATCH 05/10] nouveau: keep H.264 references in the same VP slot
 
 VP3 to VP5 decode H.264 B slices with temporal direct prediction wrong
 whenever the list of reference pictures changes order.

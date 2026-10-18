@@ -1,0 +1,6 @@
+$ MOZ_LOG=FFmpegVideo:5 firefox video.mp4
+VA-API FFmpeg init successful
++ FFmpegVideoDecoder, init, IsHardwareAccelerated=true
++ VA-API frame pts=0 dts=66666 duration=33333
++ VA-API frame pts=33333 dts=100000 duration=33333
+# in 20 s: 479 frames decoded on the GPU, 0 on the CPU

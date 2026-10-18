@@ -8,14 +8,14 @@
 
 ### Hardware video decoding in Firefox on older NVIDIA GPUs
 
-**Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, no GPU errors on video playback, and GTK 4 menus that draw correctly.**
+**Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, H.264 pictures that match software decoding, no GPU errors on video playback, and GTK 4 menus that draw correctly.**
 
 [![Checks](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml/badge.svg)](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml)
 [![Latest release](https://img.shields.io/github/v/release/francesco-stimola/mesa-nouveau-fixes?sort=semver&label=release)](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Mesa](https://img.shields.io/badge/Mesa-25.2%20%7C%2026.0%20%7C%20main-green.svg)](#patches)
 
-[The problem](#the-problem) · [Results](#results) · [Patches](#patches) · [GPUs](#which-gpus-need-which-patches) · [Install](#install) · [Setup](#setup) · [Known issues](#known-issues)
+[The problem](#the-problem) · [Results](#results) · [Before and after](#before-and-after) · [Patches](#patches) · [GPUs](#which-gpus-need-which-patches) · [Install](#install) · [Setup](#setup) · [Known issues](#known-issues)
 
 </div>
 
@@ -41,6 +41,13 @@ browsers never use it:
   to VP5 decoders ([which ones](#which-gpus-need-which-patches)), B frames
   that use temporal direct prediction, which YouTube's H.264 streams use in
   places, are decoded wrong in every player.
+- **Interlaced and monochrome H.264 comes out wrong.** On the same GPUs,
+  streams that mix field pictures with MBAFF frames, as TV broadcasts do,
+  decode into blocks and garbage. Monochrome streams are not decoded at all:
+  in their place comes an old picture left in video memory.
+- **Converted pictures turn green and magenta.** When VA-API converts
+  frames to I420 or YV12, as players ask when they cannot use the decoded
+  surfaces directly, the V plane gets the U values.
 - **Stopping a video can freeze the GPU.** A player that closes its decoder
   while the GPU still works on the last frames leaves the kernel unable to
   stop the decoder's channel (`failed to idle channel`), and the next video
@@ -81,10 +88,15 @@ decoding is exact, so a correct decoder differs on no frame:
 |---|---|---|
 | Big Buck Bunny from YouTube, H.264 720p60, 0:50–1:15 | 143 of 1501 frames differ | **none** |
 | Sintel and Tears of Steel from YouTube, H.264 1080p, 25 s each | 13 of 1202 frames differ | **none** |
-| FFmpeg's H.264 conformance streams that VP4 decodes | 2884 frames in 50 of 163 streams differ | **653 frames in 13 streams** |
+| FFmpeg's H.264 conformance streams that VP4 decodes | 2834 frames in 49 of 163 streams differ | **50 frames in 1 stream** |
 
-The 13 conformance streams still wrong use monochrome video, cropping, or
-field and MBAFF coding; each one was at least as wrong before.
+The stream still wrong, `slice2_field_aurora4`, codes field pictures with
+the deblocking filter off across slice edges (`disable_deblocking_filter_idc`
+2). Its luma differs slightly on some top macroblock edges (50 dB PSNR). The
+decoder reads slice headers on its own, so the driver has nothing to pass
+for this; it looks like a limit of the hardware or its firmware. The other
+14 streams of the suite use Extended profile features or Baseline FMO and
+ASO, which ffmpeg does not decode through VA-API.
 
 Uniform buffer updates, same GPU, measured with
 [`tests/ubo-two-contexts.c`](tests/ubo-two-contexts.c) (20 batches, each
@@ -96,16 +108,92 @@ ending with a readback):
 | One context orphaning its buffer, wrong readbacks | 20 of 20 | **0 of 20** |
 | Menus in Files (GTK 4.14, default renderer) | garbled | **correct** |
 
-The same scripted GTK 4 session with both drivers, GTK's default renderer
-([how it is made](assets/src/gtk-menus)):
+## Before and after
+
+Each fix on the same GeForce GT 240M, with a driver that has every patch but
+that one and with one that has all of them. Video panels are frames the GPU
+decoded; terminal panels show the commands' output, shortened
+([how they are made](assets/src/before-after)).
+
+**0001.** Traps in the kernel log every time a video starts:
+
+<p align="center">
+  <img src="assets/video-start-traps.gif" width="100%"
+       alt="Kernel log after mpv starts a video. Without 0001: SURF_HEIGHT_OVERRUN traps, 35 messages per video start. With 0001: no messages.">
+</p>
+
+**0002.** Firefox decodes on the GPU instead of the CPU:
+
+<p align="center">
+  <img src="assets/firefox-export.gif" width="100%"
+       alt="Firefox decoder log. Without 0002: vaExportSurfaceHandle fails and Firefox decodes 472 frames on the CPU in 20 seconds, some of them late. With 0002: 479 frames decoded on the GPU, none on the CPU.">
+</p>
+
+**0003.** A looping clip stays on the GPU:
+
+<p align="center">
+  <img src="assets/firefox-loop.gif" width="100%"
+       alt="Firefox decoder log of a 10-second clip playing in a loop. Without 0003: 300 frames on the GPU, then the new decoder fails and 569 frames are decoded on the CPU. With 0003: 1040 frames on the GPU in 38 seconds.">
+</p>
+
+**0004.** A scripted GTK 4 session with GTK's default renderer, on stock
+Mesa and with the patches ([how it is made](assets/src/gtk-menus)). At every
+step the window and the menu change together, which is when the bug strikes;
+in everyday use the glitches come and go:
 
 <p align="center">
   <img src="assets/gtk-menus.gif" width="100%"
        alt="A GTK 4 window with its main menu open. With stock Mesa the menu is drawn tiny in a corner and parts of the window are stretched; with the patches both are drawn correctly.">
 </p>
 
-At every step the window and the menu change together, which is when the bug
-strikes. In everyday use the glitches come and go.
+**0005.** Big Buck Bunny as YouTube serves it in H.264 720p60:
+
+<p align="center">
+  <img src="assets/h264-blocks.gif" width="100%"
+       alt="Flowers in Big Buck Bunny as the camera moves. Without 0005 blocks appear in the moving areas and spread from frame to frame; with 0005 the picture is clean.">
+</p>
+
+**0006.** A decoder stopped half way. The left side is the kernel log from
+the day the bug was found: each run hangs the GPU until a reboot.
+
+<p align="center">
+  <img src="assets/stopped-decoder.gif" width="100%"
+       alt="Kernel log. Without 0006: failed to idle channel and warnings in g84_ectx_bind after players were closed while decoding, and the GPU stays hung. With 0006: two decodes stopped after 20 frames leave no messages.">
+</p>
+
+**0007.** Decoded frames converted to I420 by VA video processing:
+
+<p align="center">
+  <img src="assets/vpp-colours.gif" width="100%"
+       alt="Big Buck Bunny converted to I420. Without 0007 the sky is pink, the grass bright green and the rocks purple; with 0007 the colours are right.">
+</p>
+
+**0008.** Traps when a program creates YUYV or UYVY surfaces. Stock Mesa
+does not show them: its clears never cover these surfaces, the bug 0001
+fixes, and 0001 brings this one out.
+
+<p align="center">
+  <img src="assets/yuyv-traps.gif" width="100%"
+       alt="Kernel log after uploading a YUYV frame through VA-API. Without 0008: RT_FAULT traps and a trapped write with PAGE_NOT_PRESENT. With 0008: no messages.">
+</p>
+
+**0009.** A monochrome conformance stream, next to software decoding.
+**Without 0009 the GPU decodes nothing of the video**: what comes out is an
+old picture left in video memory, the same every time, unrelated to the
+video. With 0009 every frame matches software decoding.
+
+<p align="center">
+  <img src="assets/h264-monochrome.gif" width="100%"
+       alt="Three panels. Software decoding and With 0009 show the same monochrome video, a man in a hard hat talking. Without 0009 shows an unrelated colour picture of a building site, left in video memory.">
+</p>
+
+**0010.** An interlaced conformance stream that mixes field pictures with
+MBAFF frames:
+
+<p align="center">
+  <img src="assets/h264-interlaced.gif" width="100%"
+       alt="A crane against the sky. Without 0010 the picture is washed out and broken into blocks and stripes; with 0010 it is clean.">
+</p>
 
 ## Patches
 
@@ -123,6 +211,9 @@ upstream review). They apply with `git am` or `patch -p1`.
 | **0005** nouveau: keep H.264 references in the same VP slot | Blocks in moving areas of H.264 videos, spread by B frames used as references | The decoder names the pictures that stored motion vectors point to by their position in the reference list, and players reorder that list at every reference frame, so temporal direct prediction reads the wrong pictures | VP3 to VP5 |
 | **0006** nouveau: wait for the video engines before destroying a vp3 decoder | After a video stops early, the next one freezes the GPU | The decoder deletes its engine objects while the engines still work through the last pictures, and the kernel cannot idle the channel | VP3 to VP5 |
 | **0007** vl/compositor: render the V plane with its own gfx shaders | Green and magenta colours when VA video processing converts to I420 or YV12 | The shader path renders the V plane with the shaders for both chroma planes, which write U into it | Every GPU nouveau decodes video on, and other drivers without compute video processing |
+| **0008** nv50: size surface views by blocks when the block size differs | With 0001, `RT_FAULT` traps when a program creates YUYV or UYVY surfaces, as mpv does when it starts | The VA frontend clears these buffers through RGBA8 views, which hold one block of two pixels per texel. nv50 and nvc0 size the view in pixels, twice the buffer's width. Once 0001 lets clears cover their whole surface, they write past the end of the buffer. | nv50 and nvc0 drivers |
+| **0009** nouveau: pass chroma_format_idc to the vp3 H.264 decoder | Monochrome H.264 does not decode | The decoder is always told the stream is 4:2:0 | VP3 to VP5 |
+| **0010** nouveau: tell the vp3 H.264 decoder whether a picture is MBAFF | Blocks and garbage in interlaced H.264 that mixes field pictures with MBAFF frames, as TV broadcasts do | The decoder is told that every picture of such a stream is MBAFF coded, field pictures included | VP3 to VP5 |
 
 0002 weaves the two fields into a progressive NV12 copy on the GPU when a
 surface is first exported, and refreshes the copy after every decode, video
@@ -137,21 +228,24 @@ nouveau decodes video with a different engine on each GPU generation. The
 nouveau chipset (in brackets) is what `vainfo` prints after "for", for
 example `NVA5`.
 
-| GPUs | Examples | Video engine | Codecs | 0001 | 0002 | 0003 | 0004 | 0005 | 0006 | 0007 |
-|---|---|---|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| G80 (NV50) | GeForce 8800 GTX, 8800 GTS 320/640 | VP1, not supported by nouveau | – | | | | ✓ | | | |
-| G84–G96, GT200 (NV84–NVA0) | GeForce 8400 GS (first version), 8500 GT, 8600, 8800 GT, 9400 GT–9800 GTX, GTS 250, GTX 260–295, 8400M–9800M | VP2 | H.264, MPEG-2 | ✓ | ✓ | ✓ | ✓ | | | ✓ |
-| G98, MCP77–MCP7A (NV98, NVAA, NVAC) | GeForce 8400 GS (later versions), 9300 GS, 9200M GS, 9300M GS; integrated GeForce 8200, 8300, 9300, 9400 and ION | VP3 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| GT215–GT218, MCP89 (NVA3, NVA5, NVA8, NVAF) | GeForce 210, GT 220, GT 240, 310, 315, G 210M, GT 230M–GT 335M, 320M | VP4 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| GF100–GF116 (NVC0–NVCF) | GeForce 400 series, most of the 500 series | VP4 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | | ✓ | ✓ | ✓ |
-| GF117, GF119, Kepler (NVD7, NVD9, NVE4–NV108) | GeForce GT 520, GT 610, Kepler models of the 600 and 700 series such as GT 710, GT 730, GTX 660, GTX 770 | VP5 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | | ✓ | ✓ | ✓ |
-| Maxwell and later (NV117 on) | GeForce GTX 745, 750, 750 Ti and later | not supported by nouveau | – | | | | | | | |
+| GPUs | Examples | Video engine | Codecs | 0001 | 0002 | 0003 | 0004 | 0005 | 0006 | 0007 | 0008 | 0009 | 0010 |
+|---|---|---|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| G80 (NV50) | GeForce 8800 GTX, 8800 GTS 320/640 | VP1, not supported by nouveau | – | | | | ✓ | | | | | | |
+| G84–G96, GT200 (NV84–NVA0) | GeForce 8400 GS (first version), 8500 GT, 8600, 8800 GT, 9400 GT–9800 GTX, GTS 250, GTX 260–295, 8400M–9800M | VP2 | H.264, MPEG-2 | ✓ | ✓ | ✓ | ✓ | | | ✓ | ✓ | | |
+| G98, MCP77–MCP7A (NV98, NVAA, NVAC) | GeForce 8400 GS (later versions), 9300 GS, 9200M GS, 9300M GS; integrated GeForce 8200, 8300, 9300, 9400 and ION | VP3 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| GT215–GT218, MCP89 (NVA3, NVA5, NVA8, NVAF) | GeForce 210, GT 220, GT 240, 310, 315, G 210M, GT 230M–GT 335M, 320M | VP4 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| GF100–GF116 (NVC0–NVCF) | GeForce 400 series, most of the 500 series | VP4 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| GF117, GF119, Kepler (NVD7, NVD9, NVE4–NV108) | GeForce GT 520, GT 610, Kepler models of the 600 and 700 series such as GT 710, GT 730, GTX 660, GTX 770 | VP5 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Maxwell and later (NV117 on) | GeForce GTX 745, 750, 750 Ti and later | not supported by nouveau | – | | | | | | | | | | |
 
 0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
 with or without video decoding. 0003 changes code every nouveau GPU runs;
 the failure it fixes shows up when a program re-creates a video decoder.
-Some GeForce 600 and 700 models use Fermi or Maxwell chips: check the
-chipset `vainfo` prints.
+VP2 GPUs set the two parameters 0009 and 0010 correct in the same way, in
+their own decoder code (`nv84_video_bsp.c`, `nv84_video_vp.c`); these
+patches leave it alone, since there was no VP2 GPU to test them on. Some
+GeForce 600 and 700 models use Fermi or Maxwell chips: check the chipset
+`vainfo` prints.
 
 ## Install
 
@@ -252,15 +346,17 @@ the level at boot avoids both.
 
 ## Known issues
 
-None at the moment. The H.264 conformance streams the GPU still decodes
-differently from software are listed under [Results](#results).
+- One of FFmpeg's H.264 conformance streams, `slice2_field_aurora4`, still
+  differs slightly from software decoding on VP4, probably because of the
+  hardware: see [Results](#results). No other stream or video we tested
+  does.
 
 ## Testing
 
 [`docs/TESTING.md`](docs/TESTING.md) lists the checks used for the results
 above: kernel traps, export with mpv, frame comparison with software decoding,
 H.264 conformance, decoders stopped early, conversion to three-plane formats,
-and Firefox logs.
+YUYV and UYVY surfaces, monochrome and interlaced H.264, and Firefox logs.
 
 ## License
 

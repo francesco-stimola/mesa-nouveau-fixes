@@ -1,0 +1,59 @@
+From 4c8d126ecb502f6527335221e382f41bb26ffde1 Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Sun, 18 Oct 2026 17:07:37 +0200
+Subject: [PATCH 09/10] nouveau: pass chroma_format_idc to the vp3 H.264
+ decoder
+
+The H.264 picture parameters for BSP and VP both have a
+chroma_format_idc field, but nouveau always sets 4:2:0 (in the BSP
+structure the field was still called unk00). Monochrome streams, which
+the High profile allows, are then parsed as if they carried chroma, and
+every picture comes out wrong, luma included.
+
+Pass the stream's value to both engines. With 4:0:0 the decoder leaves
+the chroma planes alone, and the VA frontend clears them to grey when
+it allocates the surface.
+
+Tested on a GeForce GT 240M with the two monochrome streams of the
+H.264 conformance suite, HPCAMOLQ_BRCM_B and HPCVMOLQ_BRCM_B: every
+frame was wrong before, and now every frame matches software decoding.
+---
+ src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c | 4 ++--
+ src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c  | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
+index c6c287b..bed5d08 100644
+--- a/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
++++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
+@@ -77,7 +77,7 @@ struct vc1_picparm_bsp {
+ 
+ struct h264_picparm_bsp {
+    // 00
+-   uint32_t unk00;
++   uint32_t chroma_format_idc;
+    // 04
+    uint32_t log2_max_frame_num_minus4; // 04 checked
+    uint32_t pic_order_cnt_type; // 08 checked
+@@ -201,7 +201,7 @@ nouveau_vp3_fill_picparm_h264_bsp(struct nouveau_vp3_decoder *dec,
+       caps |= 1 << 20;
+ 
+    assert(offsetof(struct h264_picparm_bsp, bottom_field_flag) == (0x39 + 0x24));
+-   h->unk00 = 1;
++   h->chroma_format_idc = d->pps->sps->chroma_format_idc;
+    h->pad1 = h->pad2 = 0;
+    h->unk = 0;
+    h->log2_max_frame_num_minus4 = d->pps->sps->log2_max_frame_num_minus4;
+diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
+index f1e9717..57a027b 100644
+--- a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
++++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
+@@ -343,7 +343,7 @@ nouveau_vp3_fill_picparm_h264_vp(struct nouveau_vp3_decoder *dec,
+    h->second_field = 0; // set in nouveau_vp3_fill_picparm_h264_vp_refs
+ 
+    h->log2_max_frame_num_minus4 = d->pps->sps->log2_max_frame_num_minus4;
+-   h->chroma_format_idc = 1;
++   h->chroma_format_idc = d->pps->sps->chroma_format_idc;
+ 
+    h->pic_order_cnt_type = d->pps->sps->pic_order_cnt_type;
+    h->pic_init_qp_minus26 = d->pps->pic_init_qp_minus26;

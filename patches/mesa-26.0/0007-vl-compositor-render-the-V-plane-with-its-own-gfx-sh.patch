@@ -1,7 +1,7 @@
 From fa65c9d5bace2a8d5ae41a8bd41c477e2d1939e7 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sun, 18 Oct 2026 16:19:29 +0200
-Subject: [PATCH 7/7] vl/compositor: render the V plane with its own gfx
+Subject: [PATCH 07/10] vl/compositor: render the V plane with its own gfx
  shaders
 
 The graphics path renders both chroma planes of a three-plane target,

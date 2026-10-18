@@ -6,7 +6,7 @@
     <img alt="mesa-nouveau-fixes" src="assets/logo-light.png" width="62%">
   </picture>
 
-### Hardware video decoding in Firefox on older NVIDIA GPUs
+### Hardware video decoding in Firefox and Brave on older NVIDIA GPUs
 
 **Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, H.264 pictures that match software decoding, no GPU errors on video playback, and GTK 4 menus that draw correctly.**
 
@@ -324,7 +324,8 @@ Firefox needs neither variable.
 
 ## Setup
 
-Besides the patched Mesa, a working system needs three things.
+Besides the patched Mesa, a working system needs the firmware, a browser
+that is allowed to use VA-API, and fixed GPU clocks.
 [`docs/SETUP.md`](docs/SETUP.md) walks through all of them, with scripts:
 
 - **Firmware.** nouveau needs the video firmware inside NVIDIA's 340.108
@@ -336,6 +337,10 @@ Besides the patched Mesa, a working system needs three things.
   `media.hardware-video-decoding.force-enabled` is true;
   [`scripts/setup-firefox.sh`](scripts/setup-firefox.sh) sets it for every
   profile.
+- **Brave** blocks VA-API on NVIDIA GPUs too, and decodes in hardware with a
+  few command-line options ([how](docs/SETUP.md#brave-and-other-chromium-browsers)).
+  Other Chromium-based browsers take the same options; only Brave was
+  tested.
 - **GPU clocks**, below.
 
 These decoders handle H.264, MPEG-2 and VC-1 only. VP4 (GT21x) is designed for

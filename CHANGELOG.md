@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **0007** vl/compositor: render the V plane with its own gfx shaders. VA
+  video processing to I420 or YV12 no longer turns pictures green and
+  magenta on drivers that use Mesa's shader path for it, nouveau included:
+  the V plane got U. Converted frames now match software decoding on every
+  plane ([check 10](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/TESTING.md#10-conversion-to-three-plane-formats-keeps-the-colours-0007)).
+  The known issue in the README is gone.
+
 ## 1.2.0 - 2026-10-18
 
 - **0005** nouveau: keep H.264 references in the same VP slot. Moving

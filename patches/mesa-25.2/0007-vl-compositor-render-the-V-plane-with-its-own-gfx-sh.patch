@@ -1,0 +1,221 @@
+From 15476e3caa4c29eaf2babae6e600762bc377a83c Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Sun, 18 Oct 2026 16:19:29 +0200
+Subject: [PATCH 7/7] vl/compositor: render the V plane with its own gfx
+ shaders
+
+The graphics path renders both chroma planes of a three-plane target,
+such as I420 or YV12, with the UV shaders. They write U and V to the
+first two channels, so the single-channel V plane gets U, and VA video
+processing to these formats turns pictures green and magenta. The
+compute path already has separate U and V shaders.
+
+Add V variants of the YUV deinterlace and RGB-to-YUV fragment shaders,
+writing V to the first channel, and use them for the V plane.
+
+Tested on a GeForce GT 240M with ffmpeg's scale_vaapi converting to
+yuv420p: decoded H.264 now matches software decoding on all three
+planes, where the V plane was at 7 dB PSNR before. Converting RGB
+frames, the V plane went from 6.9 to 24.5 dB, level with the U plane.
+---
+ src/gallium/auxiliary/vl/vl_compositor.c     | 34 ++++++++++++--------
+ src/gallium/auxiliary/vl/vl_compositor.h     |  3 ++
+ src/gallium/auxiliary/vl/vl_compositor_gfx.c | 13 +++++---
+ src/gallium/auxiliary/vl/vl_compositor_gfx.h | 10 +++---
+ 4 files changed, 38 insertions(+), 22 deletions(-)
+
+diff --git a/src/gallium/auxiliary/vl/vl_compositor.c b/src/gallium/auxiliary/vl/vl_compositor.c
+index 4ca12f9..c2bb784 100644
+--- a/src/gallium/auxiliary/vl/vl_compositor.c
++++ b/src/gallium/auxiliary/vl/vl_compositor.c
+@@ -55,19 +55,22 @@ init_shaders(struct vl_compositor *c)
+          return false;
+       }
+ 
+-      c->fs_yuv.weave.y = create_frag_shader_deint_yuv(c, true, true);
+-      c->fs_yuv.weave.uv = create_frag_shader_deint_yuv(c, false, true);
+-      c->fs_yuv.bob.y = create_frag_shader_deint_yuv(c, true, false);
+-      c->fs_yuv.bob.uv = create_frag_shader_deint_yuv(c, false, false);
+-      if (!c->fs_yuv.weave.y || !c->fs_yuv.weave.uv ||
+-          !c->fs_yuv.bob.y || !c->fs_yuv.bob.uv) {
++      c->fs_yuv.weave.y = create_frag_shader_deint_yuv(c, VL_COMPOSITOR_PLANE_Y, true);
++      c->fs_yuv.weave.uv = create_frag_shader_deint_yuv(c, VL_COMPOSITOR_PLANE_UV, true);
++      c->fs_yuv.weave.v = create_frag_shader_deint_yuv(c, VL_COMPOSITOR_PLANE_V, true);
++      c->fs_yuv.bob.y = create_frag_shader_deint_yuv(c, VL_COMPOSITOR_PLANE_Y, false);
++      c->fs_yuv.bob.uv = create_frag_shader_deint_yuv(c, VL_COMPOSITOR_PLANE_UV, false);
++      c->fs_yuv.bob.v = create_frag_shader_deint_yuv(c, VL_COMPOSITOR_PLANE_V, false);
++      if (!c->fs_yuv.weave.y || !c->fs_yuv.weave.uv || !c->fs_yuv.weave.v ||
++          !c->fs_yuv.bob.y || !c->fs_yuv.bob.uv || !c->fs_yuv.bob.v) {
+          debug_printf("Unable to create YCbCr i-to-YCbCr p deint fragment shader.\n");
+          return false;
+       }
+ 
+-      c->fs_rgb_yuv.y = create_frag_shader_rgb_yuv(c, true);
+-      c->fs_rgb_yuv.uv = create_frag_shader_rgb_yuv(c, false);
+-      if (!c->fs_rgb_yuv.y || !c->fs_rgb_yuv.uv) {
++      c->fs_rgb_yuv.y = create_frag_shader_rgb_yuv(c, VL_COMPOSITOR_PLANE_Y);
++      c->fs_rgb_yuv.uv = create_frag_shader_rgb_yuv(c, VL_COMPOSITOR_PLANE_UV);
++      c->fs_rgb_yuv.v = create_frag_shader_rgb_yuv(c, VL_COMPOSITOR_PLANE_V);
++      if (!c->fs_rgb_yuv.y || !c->fs_rgb_yuv.uv || !c->fs_rgb_yuv.v) {
+          debug_printf("Unable to create RGB-to-YUV fragment shader.\n");
+          return false;
+       }
+@@ -118,10 +121,13 @@ static void cleanup_shaders(struct vl_compositor *c)
+       c->pipe->delete_fs_state(c->pipe, c->fs_weave_rgb);
+       c->pipe->delete_fs_state(c->pipe, c->fs_yuv.weave.y);
+       c->pipe->delete_fs_state(c->pipe, c->fs_yuv.weave.uv);
++      c->pipe->delete_fs_state(c->pipe, c->fs_yuv.weave.v);
+       c->pipe->delete_fs_state(c->pipe, c->fs_yuv.bob.y);
+       c->pipe->delete_fs_state(c->pipe, c->fs_yuv.bob.uv);
++      c->pipe->delete_fs_state(c->pipe, c->fs_yuv.bob.v);
+       c->pipe->delete_fs_state(c->pipe, c->fs_rgb_yuv.y);
+       c->pipe->delete_fs_state(c->pipe, c->fs_rgb_yuv.uv);
++      c->pipe->delete_fs_state(c->pipe, c->fs_rgb_yuv.v);
+    }
+ 
+    if (c->pipe_gfx_supported) {
+@@ -336,6 +342,7 @@ set_yuv_layer(struct vl_compositor_state *s, struct vl_compositor *c,
+    float half_a_line;
+    unsigned i;
+    bool y = plane == VL_COMPOSITOR_PLANE_Y;
++   bool v = plane == VL_COMPOSITOR_PLANE_V;
+ 
+    assert(s && c && buffer);
+ 
+@@ -363,7 +370,7 @@ set_yuv_layer(struct vl_compositor_state *s, struct vl_compositor *c,
+       s->layers[layer].src.tl.y += half_a_line;
+       s->layers[layer].src.br.y += half_a_line;
+       if (c->pipe_gfx_supported)
+-          s->layers[layer].fs = (y) ? c->fs_yuv.bob.y : c->fs_yuv.bob.uv;
++          s->layers[layer].fs = y ? c->fs_yuv.bob.y : v ? c->fs_yuv.bob.v : c->fs_yuv.bob.uv;
+       if (c->pipe_cs_composit_supported)
+           s->layers[layer].cs = (y) ? c->cs_yuv.progressive.y : c->cs_yuv.progressive.uv;
+       break;
+@@ -373,7 +380,7 @@ set_yuv_layer(struct vl_compositor_state *s, struct vl_compositor *c,
+       s->layers[layer].src.tl.y -= half_a_line;
+       s->layers[layer].src.br.y -= half_a_line;
+       if (c->pipe_gfx_supported)
+-          s->layers[layer].fs = (y) ? c->fs_yuv.bob.y : c->fs_yuv.bob.uv;
++          s->layers[layer].fs = y ? c->fs_yuv.bob.y : v ? c->fs_yuv.bob.v : c->fs_yuv.bob.uv;
+       if (c->pipe_cs_composit_supported)
+           s->layers[layer].cs = (y) ? c->cs_yuv.progressive.y : c->cs_yuv.progressive.uv;
+       break;
+@@ -394,7 +401,7 @@ set_yuv_layer(struct vl_compositor_state *s, struct vl_compositor *c,
+ 
+    default:
+       if (c->pipe_gfx_supported)
+-          s->layers[layer].fs = (y) ? c->fs_yuv.weave.y : c->fs_yuv.weave.uv;
++          s->layers[layer].fs = y ? c->fs_yuv.weave.y : v ? c->fs_yuv.weave.v : c->fs_yuv.weave.uv;
+       if (c->pipe_cs_composit_supported)
+           s->layers[layer].cs = (y) ? c->cs_yuv.weave.y : c->cs_yuv.weave.uv;
+       break;
+@@ -427,7 +434,8 @@ set_rgb_to_yuv_layer(struct vl_compositor_state *s, struct vl_compositor *c,
+       else if (plane == VL_COMPOSITOR_PLANE_UV)
+          s->layers[layer].cs = c->cs_rgb_yuv.uv;
+    } else if (c->pipe_gfx_supported)
+-      s->layers[layer].fs = y ? c->fs_rgb_yuv.y : c->fs_rgb_yuv.uv;
++      s->layers[layer].fs = y ? c->fs_rgb_yuv.y :
++                            plane == VL_COMPOSITOR_PLANE_V ? c->fs_rgb_yuv.v : c->fs_rgb_yuv.uv;
+ 
+    s->layers[layer].samplers[0] = c->sampler_linear;
+    s->layers[layer].samplers[1] = NULL;
+diff --git a/src/gallium/auxiliary/vl/vl_compositor.h b/src/gallium/auxiliary/vl/vl_compositor.h
+index 1708d7e..f340974 100644
+--- a/src/gallium/auxiliary/vl/vl_compositor.h
++++ b/src/gallium/auxiliary/vl/vl_compositor.h
+@@ -167,10 +167,12 @@ struct vl_compositor
+       struct {
+          void *y;
+          void *uv;
++         void *v;
+       } weave;
+       struct {
+          void *y;
+          void *uv;
++         void *v;
+       } bob;
+    } fs_yuv;
+ 
+@@ -195,6 +197,7 @@ struct vl_compositor
+    struct {
+       void *y;
+       void *uv;
++      void *v;
+    } fs_rgb_yuv;
+ 
+    struct {
+diff --git a/src/gallium/auxiliary/vl/vl_compositor_gfx.c b/src/gallium/auxiliary/vl/vl_compositor_gfx.c
+index 688ea3d..59a9a4d 100644
+--- a/src/gallium/auxiliary/vl/vl_compositor_gfx.c
++++ b/src/gallium/auxiliary/vl/vl_compositor_gfx.c
+@@ -308,7 +308,7 @@ create_frag_shader_weave_rgb(struct vl_compositor *c)
+ }
+ 
+ void *
+-create_frag_shader_deint_yuv(struct vl_compositor *c, bool y, bool w)
++create_frag_shader_deint_yuv(struct vl_compositor *c, enum vl_compositor_plane plane, bool w)
+ {
+    struct ureg_program *shader;
+    struct ureg_dst texel, fragment;
+@@ -325,8 +325,11 @@ create_frag_shader_deint_yuv(struct vl_compositor *c, bool y, bool w)
+    else
+       create_frag_shader_yuv(shader, texel);
+ 
+-   if (y)
++   if (plane == VL_COMPOSITOR_PLANE_Y)
+       ureg_MOV(shader, ureg_writemask(fragment, TGSI_WRITEMASK_X), ureg_src(texel));
++   else if (plane == VL_COMPOSITOR_PLANE_V)
++      ureg_MOV(shader, ureg_writemask(fragment, TGSI_WRITEMASK_X),
++               ureg_scalar(ureg_src(texel), TGSI_SWIZZLE_Z));
+    else
+       ureg_MOV(shader, ureg_writemask(fragment, TGSI_WRITEMASK_XY),
+                        ureg_swizzle(ureg_src(texel), TGSI_SWIZZLE_Y,
+@@ -431,7 +434,7 @@ create_frag_shader_rgba(struct vl_compositor *c)
+ }
+ 
+ void *
+-create_frag_shader_rgb_yuv(struct vl_compositor *c, bool y)
++create_frag_shader_rgb_yuv(struct vl_compositor *c, enum vl_compositor_plane plane)
+ {
+    struct ureg_program *shader;
+    struct ureg_src tc, sampler;
+@@ -454,8 +457,10 @@ create_frag_shader_rgb_yuv(struct vl_compositor *c, bool y)
+ 
+    ureg_TEX(shader, texel, TGSI_TEXTURE_2D, tc, sampler);
+ 
+-   if (y) {
++   if (plane == VL_COMPOSITOR_PLANE_Y) {
+       ureg_DP4(shader, ureg_writemask(fragment, TGSI_WRITEMASK_X), csc[0], ureg_src(texel));
++   } else if (plane == VL_COMPOSITOR_PLANE_V) {
++      ureg_DP4(shader, ureg_writemask(fragment, TGSI_WRITEMASK_X), csc[2], ureg_src(texel));
+    } else {
+       for (i = 0; i < 2; ++i)
+          ureg_DP4(shader, ureg_writemask(fragment, TGSI_WRITEMASK_X << i), csc[i + 1], ureg_src(texel));
+diff --git a/src/gallium/auxiliary/vl/vl_compositor_gfx.h b/src/gallium/auxiliary/vl/vl_compositor_gfx.h
+index c274816..81dfff2 100644
+--- a/src/gallium/auxiliary/vl/vl_compositor_gfx.h
++++ b/src/gallium/auxiliary/vl/vl_compositor_gfx.h
+@@ -52,9 +52,9 @@ create_frag_shader_weave_rgb(struct vl_compositor *c);
+  * create YCbCr i-to-YCbCr p deint fragment shader
+  */
+ void *
+-create_frag_shader_deint_yuv(struct vl_compositor *c,
+-                             bool                  y,
+-                             bool                  w);
++create_frag_shader_deint_yuv(struct vl_compositor    *c,
++                             enum vl_compositor_plane plane,
++                             bool                     w);
+ 
+ /**
+  * create YUV/RGB-Palette-to-RGB fragment shader
+@@ -73,8 +73,8 @@ create_frag_shader_rgba(struct vl_compositor *c);
+  * create RGB-to-YUV fragment shader
+  */
+ void *
+-create_frag_shader_rgb_yuv(struct vl_compositor *c,
+-                           bool                  y);
++create_frag_shader_rgb_yuv(struct vl_compositor    *c,
++                           enum vl_compositor_plane plane);
+ 
+ /**
+  * render the layers to the frontbuffer with graphic shader

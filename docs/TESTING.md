@@ -91,8 +91,8 @@ SHOT=hw.png LIBVA_DRIVERS_PATH=$NVFIX mpv --no-config --hwdec=vaapi --pause --st
 Compare the two images, for example with ImageMagick:
 `compare -metric MAE sw.png hw.png null:`. The patched driver differs by
 rounding only (on average 0.05 on a 0–255 scale in our runs). With stock Mesa,
-the conversion mpv falls back to swaps the chroma planes, and the colours are
-visibly wrong.
+the conversion mpv falls back to writes U into the V plane, and the colours
+are visibly wrong; 0007 fixes that conversion, see check 10.
 
 ## 5. Firefox decodes in hardware (0002, 0003)
 
@@ -233,3 +233,33 @@ Stock Mesa leaves `failed to idle channel` in the kernel log on the first
 try, and the next program that decodes freezes the GPU: reboot before
 decoding again. The patched driver leaves nothing, run after run, and two
 programs can decode at the same time.
+
+## 10. Conversion to three-plane formats keeps the colours (0007)
+
+VA video processing converts surfaces to I420 or YV12 for players that ask
+for them. Compare each plane of the converted frames with software decoding:
+
+```sh
+LIBVA_DRIVERS_PATH=$NVFIX ffmpeg -v info -hwaccel vaapi -hwaccel_output_format vaapi \
+       -i bbb-1080p30-5M.mp4 -i bbb-1080p30-5M.mp4 -filter_complex \
+       "[0:v]scale_vaapi=format=yuv420p,hwdownload,format=yuv420p[a];[1:v]format=yuv420p[b];[a][b]psnr" \
+       -frames:v 120 -f null - 2>&1 | grep PSNR
+```
+
+Stock Mesa writes U into the V plane: `v:` is around 7 dB and the colours turn
+green and magenta. With 0007, `y:`, `u:` and `v:` are all `inf`, identical to
+software decoding. Without 0006, let stock Mesa decode the whole clip instead
+of using `-frames:v`.
+
+The same applies to RGB frames converted to YUV:
+
+```sh
+LIBVA_DRIVERS_PATH=$NVFIX ffmpeg -v info -init_hw_device vaapi=va:/dev/dri/renderD128 \
+       -filter_hw_device va -f lavfi -i testsrc2=size=1280x720:rate=30 -filter_complex \
+       "[0:v]split[a][b];[a]format=bgra,hwupload,scale_vaapi=format=yuv420p,hwdownload,format=yuv420p[a2];[b]format=yuv420p[b2];[a2][b2]psnr" \
+       -frames:v 60 -f null - 2>&1 | grep PSNR
+```
+
+The GPU converts colours a little differently from ffmpeg, so no plane is
+exact. Stock Mesa gives `v:` around 7 dB; with 0007 `v:` is level with `u:`
+(24 dB in our runs).

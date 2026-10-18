@@ -69,7 +69,9 @@ Ubuntu 24.04, Firefox 158, GPU at its highest performance level
 
 The exported frames match software decoding: a frame shown by
 `mpv --hwdec=vaapi` differs from the software-decoded one by 0.05 on average
-on a 0–255 scale.
+on a 0–255 scale. Converted to I420 by VA video processing, decoded frames
+had a V plane at 7 dB PSNR against software decoding with stock Mesa; with
+0007 all three planes match exactly.
 
 Every frame decoded on the same GPU, compared with software decoding by MD5
 ([how](docs/TESTING.md#8-h264-frames-match-software-decoding-0005)). H.264
@@ -120,6 +122,7 @@ upstream review). They apply with `git am` or `patch -p1`.
 | **0004** nv50: only push constant buffer updates through a current binding | GTK 4 menus drawn shrunken or stretched with the default renderer | Small uniform buffer updates go through a hardware binding point that can still point at the buffer's old storage, after the buffer was orphaned, or at another context's buffer | nv50 driver (GeForce 8 to 300 series) |
 | **0005** nouveau: keep H.264 references in the same VP slot | Blocks in moving areas of H.264 videos, spread by B frames used as references | The decoder names the pictures that stored motion vectors point to by their position in the reference list, and players reorder that list at every reference frame, so temporal direct prediction reads the wrong pictures | VP3 to VP5 |
 | **0006** nouveau: wait for the video engines before destroying a vp3 decoder | After a video stops early, the next one freezes the GPU | The decoder deletes its engine objects while the engines still work through the last pictures, and the kernel cannot idle the channel | VP3 to VP5 |
+| **0007** vl/compositor: render the V plane with its own gfx shaders | Green and magenta colours when VA video processing converts to I420 or YV12 | The shader path renders the V plane with the shaders for both chroma planes, which write U into it | Every GPU nouveau decodes video on, and other drivers without compute video processing |
 
 0002 weaves the two fields into a progressive NV12 copy on the GPU when a
 surface is first exported, and refreshes the copy after every decode, video
@@ -134,15 +137,15 @@ nouveau decodes video with a different engine on each GPU generation. The
 nouveau chipset (in brackets) is what `vainfo` prints after "for", for
 example `NVA5`.
 
-| GPUs | Examples | Video engine | Codecs | 0001 | 0002 | 0003 | 0004 | 0005 | 0006 |
-|---|---|---|---|:-:|:-:|:-:|:-:|:-:|:-:|
-| G80 (NV50) | GeForce 8800 GTX, 8800 GTS 320/640 | VP1, not supported by nouveau | – | | | | ✓ | | |
-| G84–G96, GT200 (NV84–NVA0) | GeForce 8400 GS (first version), 8500 GT, 8600, 8800 GT, 9400 GT–9800 GTX, GTS 250, GTX 260–295, 8400M–9800M | VP2 | H.264, MPEG-2 | ✓ | ✓ | ✓ | ✓ | | |
-| G98, MCP77–MCP7A (NV98, NVAA, NVAC) | GeForce 8400 GS (later versions), 9300 GS, 9200M GS, 9300M GS; integrated GeForce 8200, 8300, 9300, 9400 and ION | VP3 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| GT215–GT218, MCP89 (NVA3, NVA5, NVA8, NVAF) | GeForce 210, GT 220, GT 240, 310, 315, G 210M, GT 230M–GT 335M, 320M | VP4 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| GF100–GF116 (NVC0–NVCF) | GeForce 400 series, most of the 500 series | VP4 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | | ✓ | ✓ |
-| GF117, GF119, Kepler (NVD7, NVD9, NVE4–NV108) | GeForce GT 520, GT 610, Kepler models of the 600 and 700 series such as GT 710, GT 730, GTX 660, GTX 770 | VP5 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | | ✓ | ✓ |
-| Maxwell and later (NV117 on) | GeForce GTX 745, 750, 750 Ti and later | not supported by nouveau | – | | | | | | |
+| GPUs | Examples | Video engine | Codecs | 0001 | 0002 | 0003 | 0004 | 0005 | 0006 | 0007 |
+|---|---|---|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| G80 (NV50) | GeForce 8800 GTX, 8800 GTS 320/640 | VP1, not supported by nouveau | – | | | | ✓ | | | |
+| G84–G96, GT200 (NV84–NVA0) | GeForce 8400 GS (first version), 8500 GT, 8600, 8800 GT, 9400 GT–9800 GTX, GTS 250, GTX 260–295, 8400M–9800M | VP2 | H.264, MPEG-2 | ✓ | ✓ | ✓ | ✓ | | | ✓ |
+| G98, MCP77–MCP7A (NV98, NVAA, NVAC) | GeForce 8400 GS (later versions), 9300 GS, 9200M GS, 9300M GS; integrated GeForce 8200, 8300, 9300, 9400 and ION | VP3 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| GT215–GT218, MCP89 (NVA3, NVA5, NVA8, NVAF) | GeForce 210, GT 220, GT 240, 310, 315, G 210M, GT 230M–GT 335M, 320M | VP4 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| GF100–GF116 (NVC0–NVCF) | GeForce 400 series, most of the 500 series | VP4 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | | ✓ | ✓ | ✓ |
+| GF117, GF119, Kepler (NVD7, NVD9, NVE4–NV108) | GeForce GT 520, GT 610, Kepler models of the 600 and 700 series such as GT 710, GT 730, GTX 660, GTX 770 | VP5 | H.264, MPEG-2, VC-1 | ✓ | ✓ | ✓ | | ✓ | ✓ | ✓ |
+| Maxwell and later (NV117 on) | GeForce GTX 745, 750, 750 Ti and later | not supported by nouveau | – | | | | | | | |
 
 0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
 with or without video decoding. 0003 changes code every nouveau GPU runs;
@@ -249,16 +252,15 @@ the level at boot avoids both.
 
 ## Known issues
 
-- **Video processing to three-plane formats swaps chroma.** Mesa's shader path
-  writes U into the V plane when converting an interlaced surface to I420 or
-  YV12, so the colours are wrong. With 0002, mpv no longer needs that
-  conversion; a fix is planned.
+None at the moment. The H.264 conformance streams the GPU still decodes
+differently from software are listed under [Results](#results).
 
 ## Testing
 
 [`docs/TESTING.md`](docs/TESTING.md) lists the checks used for the results
 above: kernel traps, export with mpv, frame comparison with software decoding,
-H.264 conformance, decoders stopped early, and Firefox logs.
+H.264 conformance, decoders stopped early, conversion to three-plane formats,
+and Firefox logs.
 
 ## License
 

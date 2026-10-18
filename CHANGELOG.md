@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 - 2026-10-18
 
 - **0007** vl/compositor: render the V plane with its own gfx shaders. VA
   video processing to I420 or YV12 no longer turns pictures green and
@@ -30,6 +30,9 @@
 - **Before and after.** The README shows every fix in a GIF, with a driver
   that has all the patches but that one and with one that has all of them
   ([how they are made](https://github.com/francesco-stimola/mesa-nouveau-fixes/tree/main/assets/src/before-after)).
+- **PPA.** [ppa:francesco-stimola/mesa-nouveau-fixes](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
+  has all ten patches for Ubuntu 24.04 and 26.04: `sudo apt upgrade`
+  installs them.
 
 ## 1.2.0 - 2026-10-18
 

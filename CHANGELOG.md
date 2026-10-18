@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0 - Unreleased
+## 1.2.0 - 2026-10-18
 
 - **0005** nouveau: keep H.264 references in the same VP slot. Moving
   areas of H.264 videos no longer break into blocks on GPUs with VP3 to VP5

@@ -17,6 +17,11 @@
 # Both decodes keep the whole coded picture (-apply_cropping 0): ffmpeg
 # cannot crop the top or the left of frames it downloads from the GPU, so
 # streams that crop would look wrong.
+#
+# FFmpeg before 8.0 decodes slice2_field_aurora4 wrongly in software
+# (https://trac.ffmpeg.org/ticket/11360): with it that stream differs for
+# every driver. docs/TESTING.md shows how to check it against FFmpeg's
+# reference checksums.
 
 set -u
 

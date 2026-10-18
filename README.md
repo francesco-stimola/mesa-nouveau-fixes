@@ -18,7 +18,7 @@
 [![PPA for Ubuntu 24.04](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.launchpad.net%2Fdevel%2F~francesco-stimola%2F%2Barchive%2Fubuntu%2Fmesa-nouveau-fixes%3Fws.op%3DgetPublishedSources%26source_name%3Dmesa%26exact_match%3Dtrue%26status%3DPublished%26distro_series%3Dhttps%3A%2F%2Fapi.launchpad.net%2Fdevel%2Fubuntu%2Fnoble&query=%24.entries%5B0%5D.source_package_version&label=PPA%2024.04&color=E95420)](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
 [![PPA for Ubuntu 26.04](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.launchpad.net%2Fdevel%2F~francesco-stimola%2F%2Barchive%2Fubuntu%2Fmesa-nouveau-fixes%3Fws.op%3DgetPublishedSources%26source_name%3Dmesa%26exact_match%3Dtrue%26status%3DPublished%26distro_series%3Dhttps%3A%2F%2Fapi.launchpad.net%2Fdevel%2Fubuntu%2Fresolute&query=%24.entries%5B0%5D.source_package_version&label=PPA%2026.04&color=E95420)](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
 
-[Fixes](#fixes) · [Results](#results) · [Patches](#patches) · [GPUs](#which-gpus-need-which-patches) · [Install](#install) · [Setup](#setup) · [Known issues](#known-issues)
+[Fixes](#fixes) · [Results](#results) · [Patches](#patches) · [GPUs](#which-gpus-need-which-patches) · [Install](#install) · [Setup](#setup)
 
 </div>
 
@@ -203,12 +203,16 @@ H.264 decoding is exact, so a correct decoder differs on no frame.
 | Firefox, the same clip in a loop | software decoding | **hardware decoding after every loop** |
 | Big Buck Bunny from YouTube, H.264 720p60, 0:50–1:15 | 143 of 1501 frames differ | **none** |
 | Sintel and Tears of Steel from YouTube, H.264 1080p, 25 s each | 13 of 1202 frames differ | **none** |
-| FFmpeg's H.264 conformance streams that VP4 decodes | 2834 frames in 49 of 163 streams differ | **50 frames in 1 stream** ([known issue](#known-issues)) |
+| FFmpeg's H.264 conformance streams that VP4 decodes | 2784 frames in 48 of 163 streams differ | **none** |
 | Kernel errors during all of the above | `SURF_HEIGHT_OVERRUN` at every video start | **none** |
 | Uniform buffer readbacks, [`tests/ubo-two-contexts.c`](tests/ubo-two-contexts.c): two contexts, one context orphaning its buffer | 40 of 40 and 20 of 20 wrong | **none wrong** |
 
 The other 14 streams of the conformance suite use Extended profile features
 or Baseline FMO and ASO, which ffmpeg does not decode through VA-API.
+FFmpeg before 8.0, the one in Ubuntu 24.04 included, decodes one stream
+wrongly, `slice2_field_aurora4` ([ticket 11360](https://trac.ffmpeg.org/ticket/11360)):
+for it the table uses FFmpeg's reference checksums, which the GPU matches
+with and without the patches.
 
 ## Patches
 
@@ -369,17 +373,6 @@ file works most of the time, but on a GeForce GT 240M switching between levels
 when the screen went off and on twice left the GPU broken: once it hung at
 once, once it kept failing every frame of the desktop until it hung. Setting
 the level at boot avoids both.
-
-## Known issues
-
-- One of FFmpeg's H.264 conformance streams, `slice2_field_aurora4`, still
-  differs slightly from software decoding on VP4. It codes field pictures
-  with the deblocking filter off across slice edges
-  (`disable_deblocking_filter_idc` 2), and its luma differs on some top
-  macroblock edges (50 dB PSNR, not visible). The decoder reads slice headers
-  on its own, so the driver has nothing to pass for this; it looks like a
-  limit of the hardware or its firmware. No other stream or video we tested
-  differs.
 
 ## Testing
 

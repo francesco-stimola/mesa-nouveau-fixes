@@ -11,6 +11,14 @@
   shows the options that make Brave decode in hardware, tested with Brave
   1.97, and how to keep them in its launchers. Other Chromium-based browsers
   take the same options.
+- **H.264 conformance.** The last stream that differed from software
+  decoding, `slice2_field_aurora4`, was a bug of FFmpeg before 8.0, which
+  decodes it wrongly ([ticket 11360](https://trac.ffmpeg.org/ticket/11360)).
+  The GPU's frames match FFmpeg's reference checksums, with and without the
+  patches. With all the patches no conformance stream differs now; stock
+  Mesa gets 48 of them wrong. The known issue in the README is gone, and
+  [check 8](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/TESTING.md#8-h264-frames-match-software-decoding-0005)
+  shows how to compare that stream with the reference.
 
 ## 1.3.0 - 2026-10-18
 

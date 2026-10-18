@@ -214,9 +214,24 @@ tests/h264-conformance.sh ~/h264-conformance system $NVFIX
 
 Each row shows a stream, whether it uses field coding and temporal direct
 prediction, and how many frames each driver gets wrong; `-` means the GPU
-did not decode the stream. In our run, stock Mesa got 2834 frames wrong in
-49 of the 163 streams VP4 decodes, and the patched driver 50, all in
-`slice2_field_aurora4`.
+did not decode the stream. In our run, stock Mesa got 2784 frames wrong in
+48 of the 163 streams VP4 decodes, and the patched driver none.
+
+FFmpeg before 8.0, the one in Ubuntu 24.04 included, decodes
+`slice2_field_aurora4` wrongly ([ticket 11360](https://trac.ffmpeg.org/ticket/11360)),
+so with it that stream shows 50 wrong frames for every driver. Compare it
+with FFmpeg's reference checksums instead:
+
+```sh
+curl -s https://raw.githubusercontent.com/FFmpeg/FFmpeg/master/tests/ref/fate/h264-conformance-slice2_field_aurora4 |
+       grep -v '^#' | cut -d, -f6 > fate.crc
+LIBVA_DRIVERS_PATH=$NVFIX ffmpeg -v error -hwaccel vaapi -hwaccel_output_format vaapi \
+       -i ~/h264-conformance/slice2_field_aurora4.264 -vf hwdownload,format=nv12,format=yuv420p \
+       -f framecrc - | grep -v '^#' | cut -d, -f6 > gpu.crc
+diff fate.crc gpu.crc && echo all frames match
+```
+
+Stock Mesa and the patched driver both match on all 50 frames.
 
 ## 9. A decoder stopped early leaves the GPU usable (0006)
 

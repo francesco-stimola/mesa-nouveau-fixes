@@ -6,7 +6,9 @@
   before/after GIF, grouped by what users see. The results are one table,
   the patch table shows which ones are in review upstream, and the GPU
   table has a row per patch, so new patches add rows instead of columns.
-  Two badges show the versions the PPA has now for Ubuntu 24.04 and 26.04.
+  Two badges show the versions the PPA has now for Ubuntu 24.04 and 26.04;
+  they refresh at most once an hour, so a slow answer from Launchpad no
+  longer turns them into a grey error badge as often.
 - **Brave.** [`docs/SETUP.md`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/SETUP.md#brave-and-other-chromium-browsers)
   shows the options that make Brave decode in hardware, tested with Brave
   1.97, and how to keep them in its launchers. Other Chromium-based browsers

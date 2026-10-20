@@ -9,6 +9,9 @@
   Two badges show the versions the PPA has now for Ubuntu 24.04 and 26.04;
   they refresh at most once an hour, so a slow answer from Launchpad no
   longer turns them into a grey error badge as often.
+- **Upstream.** 0007, 0009 and 0010 joined the other patches in Mesa
+  [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340):
+  all ten are in review. The series builds on Mesa main without warnings.
 - **Brave.** [`docs/SETUP.md`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/SETUP.md#brave-and-other-chromium-browsers)
   shows the options that make Brave decode in hardware, tested with Brave
   1.97, and how to keep them in its launchers. Other Chromium-based browsers

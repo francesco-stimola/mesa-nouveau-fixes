@@ -9,6 +9,8 @@ name: PPA
 
 on:
   schedule:
+    # GitHub starts scheduled runs late on quiet repositories: this one has
+    # started 4 to 6 hours after 05:17 UTC, between 09:30 and 11:00 UTC.
     - cron: '17 5 * * *'
   workflow_dispatch:
     inputs:

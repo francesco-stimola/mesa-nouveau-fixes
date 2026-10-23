@@ -13,10 +13,21 @@ target ends up 1 line high, so each clear raises PGRAPH
 TRAP_PROP SURF_HEIGHT_OVERRUN errors whenever a video starts, and some
 field layers are not cleared at all.
 
+Since 718e277ab56e ("util/surface: delete more pipe_context::create_surface
+usage", Mesa 25.2), util_clear_texture_as_surface() also passes a template
+on the stack, for glClearTexImage, and the hooks read the caller's stack.
+ANGLE clears new WebGL textures that way, so on Kepler the GPU process of
+Chromium-based browsers crashes on fifo faults and INVALID_VALUE errors,
+and clears that do not fault leave the texture unchanged. Kush Chandak
+found this and tested the fix on a GeForce GT 710.
+
 Build the driver surface from the template in the clear_render_target
 and clear_depth_stencil hooks. nv84_video.c clears its rings through a
 hand-made nv50_surface on a stack miptree, so it calls the internal
 helper directly instead.
+
+Fixes: 718e277ab56e ("util/surface: delete more pipe_context::create_surface usage")
+Tested-by: Kush Chandak <kushc451@gmail.com>
 ---
  .../drivers/nouveau/nv50/nv50_context.h       |  6 ++
  .../drivers/nouveau/nv50/nv50_surface.c       | 70 +++++++++++++----

@@ -9,6 +9,13 @@
   Two badges show the versions the PPA has now for Ubuntu 24.04 and 26.04;
   they refresh at most once an hour, so a slow answer from Launchpad no
   longer turns them into a grey error badge as often.
+- **0001 and WebGL.** Since Mesa 25.2, `glClearTexImage` reaches the clear
+  hooks that 0001 fixes with a template on the stack, so 0001 also fixes
+  OpenGL texture clears: on Kepler, WebGL in Chromium-based browsers crashed
+  the GPU process. Kush Chandak found this and tested it on a GeForce GT
+  710, where he also confirmed hardware decoding with all ten patches. The
+  message of 0001 now says so, with `Fixes: 718e277ab56e`; the README marks
+  0001 for G80 too and notes the two kernel fixes Kepler needs.
 - **Upstream.** 0007, 0009 and 0010 joined the other patches in Mesa
   [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340):
   all ten are in review. The series builds on Mesa main without warnings.

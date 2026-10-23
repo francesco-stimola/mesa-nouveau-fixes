@@ -81,6 +81,14 @@ render target ends up 1 line high: the kernel logs
 `gr: TRAP_PROP ... SURF_HEIGHT_OVERRUN` each time a player allocates its
 surfaces, and some fields are never cleared.
 
+Since Mesa 25.2 the same mistake also breaks texture clears in OpenGL:
+`glClearTexImage` reaches the same code with a template on the stack.
+ANGLE clears every new WebGL texture that way, so on Kepler the GPU process
+of Chromium-based browsers such as Brave crashes after a few minutes of
+browsing, and clears that don't crash leave the texture unchanged.
+Kush Chandak found this and tested the fix on a GeForce GT 710
+([!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340)).
+
 <p align="center">
   <img src="assets/video-start-traps.gif" width="100%"
        alt="Kernel log after mpv starts a video. Without 0001: SURF_HEIGHT_OVERRUN traps, 35 messages per video start. With 0001: no messages.">
@@ -253,7 +261,7 @@ check the chipset `vainfo` prints.
 
 | Patch | G80 | G84–GT200 (VP2) | G98, MCP7x (VP3) | GT21x, MCP89 (VP4) | GF100–GF116 (VP4) | GF117, GF119, Kepler (VP5) |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|
-| 0001 | | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 0001 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 0002 | | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 0003 | | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 0004 | ✓ | ✓ | ✓ | ✓ | | |
@@ -265,11 +273,18 @@ check the chipset `vainfo` prints.
 | 0010 | | | ✓ | ✓ | ✓ | ✓ |
 
 0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
-with or without video decoding. 0003 changes code every nouveau GPU runs;
+with or without video decoding; so does 0001, for texture clears on every
+GPU in the table. 0003 changes code every nouveau GPU runs;
 the failure it fixes shows up when a program re-creates a video decoder.
 VP2 GPUs set the two parameters 0009 and 0010 correct in the same way, in
 their own decoder code (`nv84_video_bsp.c`, `nv84_video_vp.c`); these
 patches leave it alone, since there was no VP2 GPU to test them on.
+
+On Kepler, Kush Chandak tested all ten patches on a GeForce GT 710
+(GK208B): H.264 and MPEG-2 decode at 1080p, H.264 identical to software
+decoding, with no kernel errors. Kepler also needs two kernel fixes by
+Risto Pajula, not merged yet, without which decoding fails whatever Mesa
+does: [patches](https://lore.kernel.org/nouveau/20260913201225.5975-1-or.pajula@gmail.com/).
 
 ## Install
 

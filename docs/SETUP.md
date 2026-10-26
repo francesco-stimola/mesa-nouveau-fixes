@@ -105,7 +105,7 @@ profile only, set it to `true` in `about:config` instead.
 
 Brave, like Chromium, blocks VA-API on NVIDIA GPUs and uses it on Linux only
 when asked to. With these options Brave 1.97 (Chromium 155) decodes in
-hardware on a Wayland desktop, local files and YouTube alike
+hardware on GNOME's Wayland desktop, local files and YouTube alike
 (`brave://media-internals` shows `VaapiVideoDecoder`):
 
 ```
@@ -130,6 +130,11 @@ the package's launchers: redo them if Brave changes its own.
 Other Chromium-based browsers, such as Chromium, Google Chrome or Vivaldi,
 use the same code and take the same options on their command line; this was
 not tested.
+
+These options were tested on a GT 240M under GNOME (Zorin OS 18). On a
+Kepler GT 710 under KDE Plasma on Wayland, Brave's default OpenGL backend
+showed no frames at all, with or without VA-API; this has not been tried on
+KDE here.
 
 ### Sites that serve H.264
 

@@ -15,7 +15,10 @@
   the GPU process. Kush Chandak found this and tested it on a GeForce GT
   710, where he also confirmed hardware decoding with all ten patches. The
   message of 0001 now says so, with `Fixes: 718e277ab56e`; the README marks
-  0001 for G80 too and notes the two kernel fixes Kepler needs.
+  0001 for G80 too and notes the two kernel fixes Kepler needs, with the
+  kernel versions that need them (6.2 and 6.6). SETUP.md says which desktop
+  the Brave options were tested on: Brave showed no frames under KDE Plasma
+  on Kepler.
 - **Upstream.** 0007, 0009 and 0010 joined the other patches in Mesa
   [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340):
   all ten are in review. The series builds on Mesa main without warnings.

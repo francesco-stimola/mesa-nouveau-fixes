@@ -283,8 +283,10 @@ patches leave it alone, since there was no VP2 GPU to test them on.
 On Kepler, Kush Chandak tested all ten patches on a GeForce GT 710
 (GK208B): H.264 and MPEG-2 decode at 1080p, H.264 identical to software
 decoding, with no kernel errors. Kepler also needs two kernel fixes by
-Risto Pajula, not merged yet, without which decoding fails whatever Mesa
-does: [patches](https://lore.kernel.org/nouveau/20260913201225.5975-1-or.pajula@gmail.com/).
+Risto Pajula, not merged yet: since Linux 6.2 the video engines fault on
+the first frame, and since Linux 6.6 every frame also waits 30 seconds.
+On these kernels decoding fails whatever Mesa does:
+[patches](https://lore.kernel.org/nouveau/20260913201225.5975-1-or.pajula@gmail.com/).
 
 ## Install
 

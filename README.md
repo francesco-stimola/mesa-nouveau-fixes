@@ -287,6 +287,8 @@ Risto Pajula, not merged yet: since Linux 6.2 the video engines fault on
 the first frame, and since Linux 6.6 every frame also waits 30 seconds.
 On these kernels decoding fails whatever Mesa does:
 [patches](https://lore.kernel.org/nouveau/20260913201225.5975-1-or.pajula@gmail.com/).
+Youssef Mahmoud also decodes H.264 in hardware on a GK104 with the patches
+and these kernel fixes.
 
 ## Install
 

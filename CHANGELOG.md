@@ -18,7 +18,8 @@
   0001 for G80 too and notes the two kernel fixes Kepler needs, with the
   kernel versions that need them (6.2 and 6.6). SETUP.md says which desktop
   the Brave options were tested on: Brave showed no frames under KDE Plasma
-  on Kepler.
+  on Kepler. On a GK104, Youssef Mahmoud also decodes H.264 in hardware with
+  the patches and the kernel fixes.
 - **Upstream.** 0007, 0009 and 0010 joined the other patches in Mesa
   [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340):
   all ten are in review. The series builds on Mesa main without warnings.

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Upstream.** 0011 joined the other patches in Mesa
+  [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340),
+  with Youssef Mahmoud's Tested-by: all eleven are in review.
+
 ## 1.4.0 - 2026-11-02
 
 - **0011** nvc0: accept tiled modifiers for planar YUV formats. On GF100

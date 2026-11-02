@@ -134,10 +134,10 @@ not tested.
 These options were tested on a GT 240M under GNOME (Zorin OS 18). On a
 Kepler GT 710 under KDE Plasma on Wayland, Brave's default OpenGL backend
 showed no frames at all, with or without VA-API; this has not been tried on
-KDE here. On a Kepler GK104 under GNOME, Brave picks hardware decoding, but
-its GPU process restarts when it creates the frame buffers (`gbm_bo_import`
-fails in its log) and playback falls back to software decoding. On Kepler,
-use Firefox for hardware decoding for now.
+KDE here. On Fermi and Kepler, Brave needs 0011: without it, its GPU process
+restarts when it creates the frame buffers (`gbm_bo_import` fails in its
+log) and playback falls back to software decoding. With it, Brave decodes in
+hardware on a Kepler GK104 under GNOME.
 
 ### Sites that serve H.264
 

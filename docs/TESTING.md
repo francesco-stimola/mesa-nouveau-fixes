@@ -319,3 +319,14 @@ In the same output, nine streams enable MBAFF and also code field pictures:
 `cama2_vtc_b`, `cama3_vtc_b`, `FRext_FRExt2_Panasonic`,
 `FRext_FRExt4_Panasonic` and `FRext_HPCAMAPALQ_BRCM_B`. Stock Mesa gets 375
 of their frames wrong, the patched driver none.
+
+## 14. Brave imports decoded frames (0011)
+
+GF100 and later GPUs only. Brave imports frames through GBM and EGL, not the
+VA driver, so this check needs the whole patched Mesa, such as the PPA's,
+instead of `$NVFIX`. Start Brave from a terminal with the options in
+[SETUP.md](SETUP.md#brave-and-other-chromium-browsers) and play an H.264
+video. Without 0011 its log repeats `nullptr returned from gbm_bo_import`
+and `Restarting GPU process due to unrecoverable error`, and playback falls
+back to software decoding. With 0011 there are no such lines, and
+`brave://media-internals` shows `VaapiVideoDecoder` for the whole video.

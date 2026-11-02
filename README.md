@@ -71,6 +71,19 @@ nouveau GPU is affected since Mesa 24.1.
        alt="Firefox decoder log of a 10-second clip playing in a loop. Without 0003: 300 frames on the GPU, then the new decoder fails and 569 frames are decoded on the CPU. With 0003: 1040 frames on the GPU in 38 seconds.">
 </p>
 
+#### 0011 · Brave decodes on the CPU on Kepler
+
+Chromium-based browsers such as Brave, and Electron apps such as Discord,
+import each decoded frame as one NV12 buffer through GBM. nvc0, the driver
+for GF100 and later GPUs, works out the tiling of such a buffer from the
+block size of its format, which NV12 does not have, so it accepted only
+linear NV12 buffers and rejected the tiled frames it exports itself. The GPU
+process kept restarting and playback fell back to software decoding. 0011
+takes the tiling from the format of the first plane. Firefox and mpv import
+the two planes separately and were not affected, nor were GeForce 8 to 300
+GPUs. Youssef Mahmoud reported this on a GK104 and tested the fix
+([issue #2](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/2)).
+
 ### GPU errors and freezes
 
 #### 0001 · GPU errors at every video start
@@ -241,6 +254,7 @@ upstream review). They apply with `git am` or `patch -p1`.
 | [0008](#0008--gpu-errors-with-yuyv-and-uyvy-surfaces) | nv50: size surface views by blocks when the block size differs | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0009](#0009--monochrome-h264-is-not-decoded) | nouveau: pass chroma_format_idc to the vp3 H.264 decoder | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0010](#0010--interlaced-h264-breaks-up) | nouveau: tell the vp3 H.264 decoder whether a picture is MBAFF | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0011](#0011--brave-decodes-on-the-cpu-on-kepler) | nvc0: accept tiled modifiers for planar YUV formats | not submitted yet |
 
 ### Which GPUs need which patches
 
@@ -271,6 +285,7 @@ check the chipset `vainfo` prints.
 | 0008 | | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 0009 | | | ✓ | ✓ | ✓ | ✓ |
 | 0010 | | | ✓ | ✓ | ✓ | ✓ |
+| 0011 | | | | | ✓ | ✓ |
 
 0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
 with or without video decoding; so does 0001, for texture clears on every
@@ -278,7 +293,8 @@ GPU in the table. 0003 changes code every nouveau GPU runs;
 the failure it fixes shows up when a program re-creates a video decoder.
 VP2 GPUs set the two parameters 0009 and 0010 correct in the same way, in
 their own decoder code (`nv84_video_bsp.c`, `nv84_video_vp.c`); these
-patches leave it alone, since there was no VP2 GPU to test them on.
+patches leave it alone, since there was no VP2 GPU to test them on. 0011
+changes code that every GF100 and later GPU runs; it was tested on Kepler.
 
 On Kepler, Kush Chandak tested all ten patches on a GeForce GT 710
 (GK208B): H.264 and MPEG-2 decode at 1080p, H.264 identical to software
@@ -288,7 +304,7 @@ the first frame, and since Linux 6.6 every frame also waits 30 seconds.
 On these kernels decoding fails whatever Mesa does:
 [patches](https://lore.kernel.org/nouveau/20260913201225.5975-1-or.pajula@gmail.com/).
 Youssef Mahmoud also decodes H.264 in hardware on a GK104 with the patches
-and these kernel fixes.
+and these kernel fixes, in Firefox, mpv and, with 0011, Brave and Discord.
 
 ## Install
 
@@ -363,7 +379,7 @@ that is allowed to use VA-API, and fixed GPU clocks.
 - **Brave** blocks VA-API on NVIDIA GPUs too, and decodes in hardware with a
   few command-line options ([how](docs/SETUP.md#brave-and-other-chromium-browsers)).
   Other Chromium-based browsers take the same options; only Brave was
-  tested. On Kepler, Brave still falls back to software decoding.
+  tested.
 - **GPU clocks**, below.
 
 These decoders handle H.264, MPEG-2 and VC-1 only. VP4 (GT21x) is designed for

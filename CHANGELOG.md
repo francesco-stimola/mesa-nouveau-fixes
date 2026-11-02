@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **0011** nvc0: accept tiled modifiers for planar YUV formats. On GF100
+  and later GPUs, Brave and other Chromium-based browsers, and Electron apps
+  such as Discord, decode in hardware: before, their GPU process could not
+  import the decoded frames (`gbm_bo_import` failed), kept restarting, and
+  playback fell back to software decoding. Youssef Mahmoud reported it and
+  tested the fix on a GK104
+  ([check 14](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/TESTING.md#14-brave-imports-decoded-frames-0011)).
 - **README.** Each fix now has one place: a short description with its
   before/after GIF, grouped by what users see. The results are one table,
   the patch table shows which ones are in review upstream, and the GPU
@@ -19,9 +26,8 @@
   kernel versions that need them (6.2 and 6.6). SETUP.md says which desktop
   the Brave options were tested on: Brave showed no frames under KDE Plasma
   on Kepler. On a GK104, Youssef Mahmoud also decodes H.264 in hardware with
-  the patches and the kernel fixes, in Firefox and mpv; Brave falls back to
-  software decoding there, because its GPU process fails to create the frame
-  buffers.
+  the patches and the kernel fixes, in Firefox and mpv, and with 0011 in
+  Brave and Discord too.
 - **Upstream.** 0007, 0009 and 0010 joined the other patches in Mesa
   [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340):
   all ten are in review. The series builds on Mesa main without warnings.

@@ -26,7 +26,7 @@ surface. Drivers with progressive buffers are not affected.
  5 files changed, 85 insertions(+), 7 deletions(-)
 
 diff --git a/src/gallium/frontends/va/image.c b/src/gallium/frontends/va/image.c
-index fd21e2a3..98ae26b0 100644
+index fd21e2a..98ae26b 100644
 --- a/src/gallium/frontends/va/image.c
 +++ b/src/gallium/frontends/va/image.c
 @@ -690,6 +690,8 @@ vlVaPutImage(VADriverContextP ctx, VASurfaceID surface, VAImageID image,
@@ -48,7 +48,7 @@ index fd21e2a3..98ae26b0 100644
  
     return VA_STATUS_SUCCESS;
 diff --git a/src/gallium/frontends/va/picture.c b/src/gallium/frontends/va/picture.c
-index c6281c0c..12477829 100644
+index c6281c0..1247782 100644
 --- a/src/gallium/frontends/va/picture.c
 +++ b/src/gallium/frontends/va/picture.c
 @@ -423,6 +423,8 @@ vlVaEndPicture(VADriverContextP ctx, VAContextID context_id)
@@ -70,7 +70,7 @@ index c6281c0c..12477829 100644
     } else if (context->decoder->entrypoint == PIPE_VIDEO_ENTRYPOINT_ENCODE) {
        switch (u_reduce_video_profile(context->templat.profile)) {
 diff --git a/src/gallium/frontends/va/postproc.c b/src/gallium/frontends/va/postproc.c
-index 2862c23e..e2692a99 100644
+index 2862c23..e2692a9 100644
 --- a/src/gallium/frontends/va/postproc.c
 +++ b/src/gallium/frontends/va/postproc.c
 @@ -772,5 +772,7 @@ vlVaHandleVAProcPipelineParameterBufferType(vlVaDriver *drv, vlVaContext *contex
@@ -82,7 +82,7 @@ index 2862c23e..e2692a99 100644
     return ret;
  }
 diff --git a/src/gallium/frontends/va/surface.c b/src/gallium/frontends/va/surface.c
-index d5293eb1..63e86e39 100644
+index d5293eb..63e86e3 100644
 --- a/src/gallium/frontends/va/surface.c
 +++ b/src/gallium/frontends/va/surface.c
 @@ -119,6 +119,8 @@ vlVaDestroySurfaces(VADriverContextP ctx, VASurfaceID *surface_list, int num_sur
@@ -213,7 +213,7 @@ index d5293eb1..63e86e39 100644
           ret = VA_STATUS_ERROR_UNSUPPORTED_MEMORY_TYPE;
           goto fail;
 diff --git a/src/gallium/frontends/va/va_private.h b/src/gallium/frontends/va/va_private.h
-index c010faf5..08c709b3 100644
+index c010faf..08c709b 100644
 --- a/src/gallium/frontends/va/va_private.h
 +++ b/src/gallium/frontends/va/va_private.h
 @@ -432,6 +432,8 @@ typedef struct {
@@ -233,6 +233,3 @@ index c010faf5..08c709b3 100644
  void vlVaAddRawHeader(struct util_dynarray *headers, uint8_t type, uint32_t size, uint8_t *buf,
                        bool is_slice, uint32_t emulation_bytes_start);
  void vlVaGetBufferFeedback(vlVaBuffer *buf);
--- 
-2.56.0.windows.2
-

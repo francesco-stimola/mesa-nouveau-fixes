@@ -37,7 +37,7 @@ and MBAFF coding, as before.
  2 files changed, 29 insertions(+), 5 deletions(-)
 
 diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video.h b/src/gallium/drivers/nouveau/nouveau_vp3_video.h
-index e4908073..47c555ad 100644
+index e490807..47c555a 100644
 --- a/src/gallium/drivers/nouveau/nouveau_vp3_video.h
 +++ b/src/gallium/drivers/nouveau/nouveau_vp3_video.h
 @@ -110,6 +110,8 @@ struct nouveau_vp3_decoder {
@@ -50,7 +50,7 @@ index e4908073..47c555ad 100644
  
     unsigned bsp_idx, vp_idx, ppp_idx;
 diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
-index d35ac315..237f9e1c 100644
+index d35ac31..237f9e1 100644
 --- a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
 +++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
 @@ -235,7 +235,7 @@ nouveau_vp3_fill_picparm_h264_vp(struct nouveau_vp3_decoder *dec,
@@ -107,6 +107,3 @@ index d35ac315..237f9e1c 100644
     }
     for (; i < 16; ++i)
        assert(!d->ref[i]);
--- 
-2.56.0.windows.2
-

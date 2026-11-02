@@ -35,7 +35,7 @@ is already done for buffers that are not bound.
  1 file changed, 13 insertions(+), 2 deletions(-)
 
 diff --git a/src/gallium/drivers/nouveau/nv50/nv50_transfer.c b/src/gallium/drivers/nouveau/nv50/nv50_transfer.c
-index a1e30820..002f76e4 100644
+index a1e3082..002f76e 100644
 --- a/src/gallium/drivers/nouveau/nv50/nv50_transfer.c
 +++ b/src/gallium/drivers/nouveau/nv50/nv50_transfer.c
 @@ -540,16 +540,27 @@ nv50_cb_push(struct nouveau_context *nv,
@@ -68,6 +68,3 @@ index a1e30820..002f76e4 100644
           if (cb_offset <= offset &&
               cb_offset + nv50->constbuf[s][i].size >= offset + words * 4) {
              cb = &nv50->constbuf[s][i];
--- 
-2.56.0.windows.2
-

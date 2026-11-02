@@ -25,7 +25,7 @@ surface. Drivers with progressive buffers are not affected.
  4 files changed, 80 insertions(+), 6 deletions(-)
 
 diff --git a/src/gallium/frontends/va/image.c b/src/gallium/frontends/va/image.c
-index 086f7caf..a2210688 100644
+index 086f7ca..a221068 100644
 --- a/src/gallium/frontends/va/image.c
 +++ b/src/gallium/frontends/va/image.c
 @@ -729,12 +729,16 @@ vlVaPutImage(VADriverContextP ctx, VASurfaceID surface, VAImageID image,
@@ -46,7 +46,7 @@ index 086f7caf..a2210688 100644
  
     return ret;
 diff --git a/src/gallium/frontends/va/picture.c b/src/gallium/frontends/va/picture.c
-index d33e938f..6eaca6a1 100644
+index d33e938..6eaca6a 100644
 --- a/src/gallium/frontends/va/picture.c
 +++ b/src/gallium/frontends/va/picture.c
 @@ -426,6 +426,8 @@ vlVaEndPicture(VADriverContextP ctx, VAContextID context_id)
@@ -68,7 +68,7 @@ index d33e938f..6eaca6a1 100644
     } else if (context->decoder->entrypoint == PIPE_VIDEO_ENTRYPOINT_ENCODE) {
        switch (u_reduce_video_profile(context->templat.profile)) {
 diff --git a/src/gallium/frontends/va/surface.c b/src/gallium/frontends/va/surface.c
-index ade36730..9727db14 100644
+index ade3673..9727db1 100644
 --- a/src/gallium/frontends/va/surface.c
 +++ b/src/gallium/frontends/va/surface.c
 @@ -105,6 +105,8 @@ vlVaDestroySurface(vlVaDriver *drv, vlVaSurface *surf)
@@ -191,7 +191,7 @@ index ade36730..9727db14 100644
           ret = VA_STATUS_ERROR_UNSUPPORTED_MEMORY_TYPE;
           goto fail;
 diff --git a/src/gallium/frontends/va/va_private.h b/src/gallium/frontends/va/va_private.h
-index 00d30715..8cddf3d9 100644
+index 00d3071..8cddf3d 100644
 --- a/src/gallium/frontends/va/va_private.h
 +++ b/src/gallium/frontends/va/va_private.h
 @@ -431,6 +431,8 @@ typedef struct {
@@ -211,6 +211,3 @@ index 00d30715..8cddf3d9 100644
  void vlVaAddRawHeader(struct util_dynarray *headers, uint8_t type, uint32_t size, uint8_t *buf,
                        bool is_slice, uint32_t emulation_bytes_start);
  void vlVaGetBufferFeedback(vlVaBuffer *buf);
--- 
-2.56.0.windows.2
-

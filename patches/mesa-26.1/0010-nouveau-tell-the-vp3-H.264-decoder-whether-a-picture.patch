@@ -22,7 +22,7 @@ match software decoding frame for frame. No other stream changed.
  2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
-index ece6cf56..a81090b5 100644
+index ece6cf5..a81090b 100644
 --- a/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
 +++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
 @@ -189,7 +189,8 @@ nouveau_vp3_fill_picparm_h264_bsp(struct nouveau_vp3_decoder *dec,
@@ -36,7 +36,7 @@ index ece6cf56..a81090b5 100644
     h->bottom_field_flag = d->bottom_field_flag;
     memset(h->real_pad, 0, sizeof(h->real_pad));
 diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
-index 45458dbb..00d521c4 100644
+index 45458db..00d521c 100644
 --- a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
 +++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
 @@ -251,7 +251,8 @@ nouveau_vp3_fill_picparm_h264_vp(struct nouveau_vp3_decoder *dec,
@@ -49,6 +49,3 @@ index 45458dbb..00d521c4 100644
     h->direct_8x8_inference_flag = d->pps->sps->direct_8x8_inference_flag;
     h->weighted_pred_flag = d->pps->weighted_pred_flag;
     h->constrained_intra_pred_flag = d->pps->constrained_intra_pred_flag;
--- 
-2.56.0.windows.2
-

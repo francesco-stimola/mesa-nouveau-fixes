@@ -23,7 +23,7 @@ frame was wrong before, and now every frame matches software decoding.
  2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
-index 7f79cfe6..ece6cf56 100644
+index 7f79cfe..ece6cf5 100644
 --- a/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
 +++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
 @@ -69,7 +69,7 @@ struct vc1_picparm_bsp {
@@ -45,7 +45,7 @@ index 7f79cfe6..ece6cf56 100644
     h->unk = 0;
     h->log2_max_frame_num_minus4 = d->pps->sps->log2_max_frame_num_minus4;
 diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
-index 237f9e1c..45458dbb 100644
+index 237f9e1..45458db 100644
 --- a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
 +++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
 @@ -261,7 +261,7 @@ nouveau_vp3_fill_picparm_h264_vp(struct nouveau_vp3_decoder *dec,
@@ -57,6 +57,3 @@ index 237f9e1c..45458dbb 100644
  
     h->pic_order_cnt_type = d->pps->sps->pic_order_cnt_type;
     h->pic_init_qp_minus26 = d->pps->pic_init_qp_minus26;
--- 
-2.56.0.windows.2
-

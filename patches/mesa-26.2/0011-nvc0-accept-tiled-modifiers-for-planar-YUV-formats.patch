@@ -18,7 +18,7 @@ back to software decoding.
  1 file changed, 15 insertions(+), 4 deletions(-)
 
 diff --git a/src/gallium/drivers/nouveau/nvc0/nvc0_resource.c b/src/gallium/drivers/nouveau/nvc0/nvc0_resource.c
-index 98339c09..ff2deca8 100644
+index 98339c0..ff2deca 100644
 --- a/src/gallium/drivers/nouveau/nvc0/nvc0_resource.c
 +++ b/src/gallium/drivers/nouveau/nvc0/nvc0_resource.c
 @@ -1,6 +1,7 @@
@@ -68,6 +68,3 @@ index 98339c09..ff2deca8 100644
     const uint32_t num_uc = uc_kind ? 6 : 0; /* max block height = 32 GOBs */
     const uint32_t kind_gen = nvc0_get_kind_generation(screen);
     int i;
--- 
-2.56.0.windows.2
-

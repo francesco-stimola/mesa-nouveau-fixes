@@ -24,7 +24,7 @@ all clean.
  1 file changed, 18 insertions(+)
 
 diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video.c b/src/gallium/drivers/nouveau/nouveau_vp3_video.c
-index e21b1227..f700c1a0 100644
+index e21b122..f700c1a 100644
 --- a/src/gallium/drivers/nouveau/nouveau_vp3_video.c
 +++ b/src/gallium/drivers/nouveau/nouveau_vp3_video.c
 @@ -205,8 +205,26 @@ static void
@@ -54,6 +54,3 @@ index e21b1227..f700c1a0 100644
     nouveau_bo_ref(NULL, &dec->ref_bo);
     nouveau_bo_ref(NULL, &dec->bitplane_bo);
     nouveau_bo_ref(NULL, &dec->inter_bo[0]);
--- 
-2.56.0.windows.2
-

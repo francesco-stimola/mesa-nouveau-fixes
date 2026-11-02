@@ -22,7 +22,7 @@ Fixes: 821f4c8d99a3 ("nouveau: import libdrm_nouveau")
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/src/gallium/winsys/nouveau/drm/nouveau.c b/src/gallium/winsys/nouveau/drm/nouveau.c
-index d515c23a..5bafb4f7 100644
+index d515c23..5bafb4f 100644
 --- a/src/gallium/winsys/nouveau/drm/nouveau.c
 +++ b/src/gallium/winsys/nouveau/drm/nouveau.c
 @@ -229,6 +229,7 @@ nouveau_object_channel_del(struct nouveau_object *obj)
@@ -42,6 +42,3 @@ index d515c23a..5bafb4f7 100644
  }
  
  static void
--- 
-2.56.0.windows.2
-

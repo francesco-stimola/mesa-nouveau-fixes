@@ -36,7 +36,7 @@ Tested-by: Kush Chandak <kushc451@gmail.com>
  4 files changed, 126 insertions(+), 32 deletions(-)
 
 diff --git a/src/gallium/drivers/nouveau/nv50/nv50_context.h b/src/gallium/drivers/nouveau/nv50/nv50_context.h
-index ed43acb3..c8187448 100644
+index ed43acb..c818744 100644
 --- a/src/gallium/drivers/nouveau/nv50/nv50_context.h
 +++ b/src/gallium/drivers/nouveau/nv50/nv50_context.h
 @@ -318,6 +318,12 @@ extern void nv50_clear(struct pipe_context *, unsigned buffers,
@@ -53,7 +53,7 @@ index ed43acb3..c8187448 100644
  
  /* nv50_tex.c */
 diff --git a/src/gallium/drivers/nouveau/nv50/nv50_surface.c b/src/gallium/drivers/nouveau/nv50/nv50_surface.c
-index 1c1e7375..959433e6 100644
+index 1c1e737..959433e 100644
 --- a/src/gallium/drivers/nouveau/nv50/nv50_surface.c
 +++ b/src/gallium/drivers/nouveau/nv50/nv50_surface.c
 @@ -276,18 +276,18 @@ nv50_resource_copy_region(struct pipe_context *pipe,
@@ -161,7 +161,7 @@ index 1c1e7375..959433e6 100644
  nv50_clear(struct pipe_context *pipe, unsigned buffers,
             uint32_t color_clear_mask, uint8_t stencil_clear_mask,
 diff --git a/src/gallium/drivers/nouveau/nv50/nv84_video.c b/src/gallium/drivers/nouveau/nv50/nv84_video.c
-index 39a55c1a..986a899e 100644
+index 39a55c1..986a899 100644
 --- a/src/gallium/drivers/nouveau/nv50/nv84_video.c
 +++ b/src/gallium/drivers/nouveau/nv50/nv84_video.c
 @@ -484,16 +484,16 @@ nv84_create_decoder(struct pipe_context *context,
@@ -185,7 +185,7 @@ index 39a55c1a..986a899e 100644
        PUSH_SPACE(nv50->base.pushbuf, 5);
        PUSH_REF1(nv50->base.pushbuf, dec->fence, NOUVEAU_BO_VRAM | NOUVEAU_BO_RDWR);
 diff --git a/src/gallium/drivers/nouveau/nvc0/nvc0_surface.c b/src/gallium/drivers/nouveau/nvc0/nvc0_surface.c
-index 2609a9a8..91e34660 100644
+index 2609a9a..91e3466 100644
 --- a/src/gallium/drivers/nouveau/nvc0/nvc0_surface.c
 +++ b/src/gallium/drivers/nouveau/nvc0/nvc0_surface.c
 @@ -286,16 +286,16 @@ nvc0_resource_copy_region(struct pipe_context *pipe,
@@ -299,6 +299,3 @@ index 2609a9a8..91e34660 100644
  void
  nvc0_clear(struct pipe_context *pipe, unsigned buffers,
             uint32_t color_clear_mask, uint8_t stencil_clear_mask,
--- 
-2.56.0.windows.2
-

@@ -25,7 +25,7 @@ frames, the V plane went from 6.9 to 24.5 dB, level with the U plane.
  4 files changed, 38 insertions(+), 22 deletions(-)
 
 diff --git a/src/gallium/auxiliary/vl/vl_compositor.c b/src/gallium/auxiliary/vl/vl_compositor.c
-index e38e4c31..98cbb652 100644
+index e38e4c3..98cbb65 100644
 --- a/src/gallium/auxiliary/vl/vl_compositor.c
 +++ b/src/gallium/auxiliary/vl/vl_compositor.c
 @@ -55,19 +55,22 @@ init_shaders(struct vl_compositor *c)
@@ -120,7 +120,7 @@ index e38e4c31..98cbb652 100644
     s->layers[layer].samplers[0] = c->sampler_linear;
     s->layers[layer].samplers[1] = NULL;
 diff --git a/src/gallium/auxiliary/vl/vl_compositor.h b/src/gallium/auxiliary/vl/vl_compositor.h
-index ecd8ea92..dbb29591 100644
+index ecd8ea9..dbb2959 100644
 --- a/src/gallium/auxiliary/vl/vl_compositor.h
 +++ b/src/gallium/auxiliary/vl/vl_compositor.h
 @@ -171,10 +171,12 @@ struct vl_compositor
@@ -145,7 +145,7 @@ index ecd8ea92..dbb29591 100644
  
     struct {
 diff --git a/src/gallium/auxiliary/vl/vl_compositor_gfx.c b/src/gallium/auxiliary/vl/vl_compositor_gfx.c
-index fba53888..49602668 100644
+index fba5388..4960266 100644
 --- a/src/gallium/auxiliary/vl/vl_compositor_gfx.c
 +++ b/src/gallium/auxiliary/vl/vl_compositor_gfx.c
 @@ -308,7 +308,7 @@ create_frag_shader_weave_rgb(struct vl_compositor *c)
@@ -192,7 +192,7 @@ index fba53888..49602668 100644
        for (i = 0; i < 2; ++i)
           ureg_DP4(shader, ureg_writemask(fragment, TGSI_WRITEMASK_X << i), csc[i + 1], ureg_src(texel));
 diff --git a/src/gallium/auxiliary/vl/vl_compositor_gfx.h b/src/gallium/auxiliary/vl/vl_compositor_gfx.h
-index c274816c..81dfff25 100644
+index c274816..81dfff2 100644
 --- a/src/gallium/auxiliary/vl/vl_compositor_gfx.h
 +++ b/src/gallium/auxiliary/vl/vl_compositor_gfx.h
 @@ -52,9 +52,9 @@ create_frag_shader_weave_rgb(struct vl_compositor *c);
@@ -219,6 +219,3 @@ index c274816c..81dfff25 100644
  
  /**
   * render the layers to the frontbuffer with graphic shader
--- 
-2.56.0.windows.2
-

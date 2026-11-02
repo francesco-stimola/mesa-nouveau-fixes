@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.0 - 2026-11-02
 
 - **0011** nvc0: accept tiled modifiers for planar YUV formats. On GF100
   and later GPUs, Brave and other Chromium-based browsers, and Electron apps
@@ -8,7 +8,8 @@
   import the decoded frames (`gbm_bo_import` failed), kept restarting, and
   playback fell back to software decoding. Youssef Mahmoud reported it and
   tested the fix on a GK104
-  ([check 14](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/TESTING.md#14-brave-imports-decoded-frames-0011)).
+  ([check 14](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/TESTING.md#14-brave-imports-decoded-frames-0011));
+  the README shows it before and after with his Brave logs.
 - **README.** Each fix now has one place: a short description with its
   before/after GIF, grouped by what users see. The results are one table,
   the patch table shows which ones are in review upstream, and the GPU
@@ -43,6 +44,9 @@
   Mesa gets 48 of them wrong. The known issue in the README is gone, and
   [check 8](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/TESTING.md#8-h264-frames-match-software-decoding-0005)
   shows how to compare that stream with the reference.
+- **PPA.** [ppa:francesco-stimola/mesa-nouveau-fixes](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
+  has all eleven patches for Ubuntu 24.04 and 26.04: `sudo apt upgrade`
+  installs them.
 
 ## 1.3.0 - 2026-10-18
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0 - 2026-11-02
 
 - **Debian and Fedora.** Two new folders of patches:
   [`patches/mesa-26.1`](https://github.com/francesco-stimola/mesa-nouveau-fixes/tree/main/patches/mesa-26.1)

@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- **Debian and Fedora.** Two new folders of patches:
+  [`patches/mesa-26.1`](https://github.com/francesco-stimola/mesa-nouveau-fixes/tree/main/patches/mesa-26.1)
+  for Debian 13 with backports and Debian testing, and
+  [`patches/mesa-26.2`](https://github.com/francesco-stimola/mesa-nouveau-fixes/tree/main/patches/mesa-26.2)
+  for Debian unstable and Fedora 44 and 45; `patches/mesa-26.0` also fits
+  Fedora 43. They make the same changes as the other folders; in 26.2, 0002
+  refreshes the exported copy after `vaPutImage` once video processing has
+  finished, as 26.2 waits for it there. On the GT 240M, the VA drivers built
+  from both folders decode, convert, upload and export frames exactly as the
+  25.2 one does, with no kernel errors.
+  [`scripts/build-debian-package.sh`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/scripts/build-debian-package.sh)
+  and [`scripts/build-fedora-package.sh`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/scripts/build-fedora-package.sh)
+  rebuild the distribution's own Mesa packages with the patches, on Fedora
+  with the H.264 decoder that Fedora leaves out.
+  [`docs/SETUP.md`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/SETUP.md#1-mesa-with-the-patches)
+  says which folder fits which distribution and how to build; the README's
+  Install section lists the ways in short.
+- **CI.** Every folder is checked against the Mesa source of the
+  distributions it is for, their own patches included: the patches must
+  apply without fuzz, as `dpkg-source` and `rpmbuild` require, and the VA
+  driver must build. A Packages workflow, run by hand, follows the Debian
+  and Fedora steps to the end and installs the packages.
 - **Upstream.** 0011 joined the other patches in Mesa
   [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340),
   with Youssef Mahmoud's Tested-by: all eleven are in review.

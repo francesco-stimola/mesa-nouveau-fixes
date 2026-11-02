@@ -13,7 +13,7 @@
 [![Checks](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml/badge.svg)](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml)
 [![Latest release](https://img.shields.io/github/v/release/francesco-stimola/mesa-nouveau-fixes?sort=semver&label=release)](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Mesa](https://img.shields.io/badge/Mesa-25.2%20%7C%2026.0%20%7C%20main-green.svg)](#patches)
+[![Mesa](https://img.shields.io/badge/Mesa-25.2%20%7C%2026.0%20%7C%2026.1%20%7C%2026.2%20%7C%20main-green.svg)](#patches)
 <br>
 [![PPA for Ubuntu 24.04](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.launchpad.net%2Fdevel%2F~francesco-stimola%2F%2Barchive%2Fubuntu%2Fmesa-nouveau-fixes%3Fws.op%3DgetPublishedSources%26source_name%3Dmesa%26exact_match%3Dtrue%26status%3DPublished%26distro_series%3Dhttps%3A%2F%2Fapi.launchpad.net%2Fdevel%2Fubuntu%2Fnoble&query=%24.entries%5B0%5D.source_package_version&label=PPA%2024.04&color=E95420&cacheSeconds=3600)](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
 [![PPA for Ubuntu 26.04](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.launchpad.net%2Fdevel%2F~francesco-stimola%2F%2Barchive%2Fubuntu%2Fmesa-nouveau-fixes%3Fws.op%3DgetPublishedSources%26source_name%3Dmesa%26exact_match%3Dtrue%26status%3DPublished%26distro_series%3Dhttps%3A%2F%2Fapi.launchpad.net%2Fdevel%2Fubuntu%2Fresolute&query=%24.entries%5B0%5D.source_package_version&label=PPA%2026.04&color=E95420&cacheSeconds=3600)](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
@@ -246,8 +246,12 @@ with and without the patches.
 
 Each patch exists for Mesa 25.2 ([`patches/mesa-25.2`](patches/mesa-25.2),
 what Ubuntu 24.04 ships), Mesa 26.0 ([`patches/mesa-26.0`](patches/mesa-26.0),
-Ubuntu 26.04) and Mesa main ([`patches/mesa-main`](patches/mesa-main), for
-upstream review). They apply with `git am` or `patch -p1`.
+Ubuntu 26.04 and Fedora 43), Mesa 26.1 ([`patches/mesa-26.1`](patches/mesa-26.1),
+Debian 13 backports and testing), Mesa 26.2 ([`patches/mesa-26.2`](patches/mesa-26.2),
+Debian unstable, Fedora 44 and 45) and Mesa main
+([`patches/mesa-main`](patches/mesa-main), for upstream review). They apply
+with `git am` or `patch -p1`, without fuzz, to the Mesa source of these
+distributions, their own patches included.
 
 | Patch | Commit | In Mesa |
 |---|---|---|
@@ -315,58 +319,27 @@ and these kernel fixes, in Firefox, mpv and, with 0011, Brave and Discord.
 
 ## Install
 
-On Ubuntu 24.04 and 26.04 and distributions based on them (Zorin OS 18,
-Linux Mint 22, ...), the [PPA](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
-has Ubuntu's own Mesa with these patches, for amd64 and i386; the badges at
-the top show the versions it has now:
+- **Ubuntu 24.04 and 26.04** and distributions based on them (Zorin OS 18,
+  Linux Mint 22, ...): the
+  [PPA](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
+  has Ubuntu's own Mesa with these patches, for amd64 and i386; the badges at
+  the top show its versions.
+  ```sh
+  sudo add-apt-repository ppa:francesco-stimola/mesa-nouveau-fixes
+  sudo apt update
+  sudo apt upgrade
+  ```
+- **Build it yourself**, on any distribution: a patched VA driver, to try for
+  one program without touching the system Mesa; for Ubuntu 24.04 each
+  release has one prebuilt ([how](docs/SETUP.md#try-it-without-installing)).
+- **Debian** 13 with backports, testing and unstable: a script rebuilds
+  Debian's own Mesa packages with the patches ([how](docs/SETUP.md#debian)).
+- **Fedora** 43 to 45: a script rebuilds Fedora's own Mesa packages with the
+  patches and with the H.264 decoder Fedora leaves out
+  ([how](docs/SETUP.md#fedora)).
 
-```sh
-sudo add-apt-repository ppa:francesco-stimola/mesa-nouveau-fixes
-sudo apt update
-sudo apt upgrade
-```
-
-Then install the firmware, set up Firefox and fix the GPU clocks, as
-[Setup](#setup) describes. [`docs/SETUP.md`](docs/SETUP.md) also explains how
-to go back to Ubuntu's Mesa.
-
-## Try it without installing
-
-The patches touch the VA driver and the nouveau Gallium driver. For a quick
-test, load a patched VA driver for one program and leave the system Mesa
-untouched.
-
-**Prebuilt, for Ubuntu 24.04.** Each
-[release](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)
-has the driver attached, built from the Mesa source Ubuntu 24.04 ships:
-
-```sh
-tar xzf mesa-nouveau-fixes-*-va-driver-ubuntu-24.04.tar.gz
-cd mesa-nouveau-fixes-*-va-driver-ubuntu-24.04
-LIBVA_DRIVERS_PATH=$PWD LIBVA_DRIVER_NAME=nouveau vainfo
-LIBVA_DRIVERS_PATH=$PWD mpv --hwdec=vaapi video.mp4
-```
-
-**From source.** On Ubuntu 24.04, with `deb-src` entries enabled:
-
-```sh
-sudo apt build-dep mesa
-apt source mesa
-./scripts/build-va-driver.sh mesa-25.2.8 patches/mesa-25.2 out
-LIBVA_DRIVERS_PATH=$PWD/out LIBVA_DRIVER_NAME=nouveau vainfo
-```
-
-This driver supports Wayland and DRM displays, which is what Firefox and mpv
-use on a Wayland desktop. X11 applications need the full Mesa from the PPA.
-
-0004 fixes the OpenGL driver, which the VA driver above does not replace. Its
-effect needs a full Mesa build; [`docs/TESTING.md`](docs/TESTING.md#7-uniform-buffer-updates-reach-their-buffer-0004)
-shows how to try one for a single program.
-
-Firefox reads VA drivers only from system directories inside its RDD sandbox.
-To test a driver from another directory, also set `MOZ_DISABLE_RDD_SANDBOX=1`
-for that run only. The PPA installs the driver in the system directories, so
-Firefox needs neither variable.
+Then install the firmware, set up the browsers and fix the GPU clocks, as
+[Setup](#setup) describes.
 
 ## Setup
 

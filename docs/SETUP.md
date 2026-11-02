@@ -1,9 +1,9 @@
 # Setup
 
 What a GeForce 8 to 700 GPU on nouveau needs for hardware video decoding in
-Firefox and Brave and a glitch-free GTK 4 desktop, on Ubuntu 24.04 or 26.04
-and distributions based on them (Zorin OS 18, Linux Mint 22, ...), Wayland
-session.
+Firefox and Brave and a glitch-free GTK 4 desktop, in a Wayland session. The
+steps were made on Ubuntu 24.04 (Zorin OS 18); section 1 also covers Debian
+and Fedora.
 
 1. [Mesa with the patches](#1-mesa-with-the-patches)
 2. [Video firmware](#2-video-firmware)
@@ -19,6 +19,24 @@ cd mesa-nouveau-fixes
 ```
 
 ## 1. Mesa with the patches
+
+Each distribution ships its own Mesa version, and each folder in
+[`patches`](../patches) fits one of them:
+
+| Distribution | Mesa | How | Patches |
+|---|---|---|---|
+| Ubuntu 24.04 and 26.04, and distributions based on them | 25.2, 26.0 | [the PPA](#ubuntu-the-ppa) | – |
+| Debian 13 with backports, Debian testing | 26.1 | [rebuild Debian's packages](#debian) | `mesa-26.1` |
+| Debian unstable | 26.2 | [rebuild Debian's packages](#debian) | `mesa-26.2` |
+| Fedora 43 | 25.3 | [rebuild Fedora's packages](#fedora) | `mesa-26.0` |
+| Fedora 44 and 45 | 26.2 | [rebuild Fedora's packages](#fedora) | `mesa-26.2` |
+| any | | [try the VA driver without installing](#try-it-without-installing) | the nearest |
+
+Debian 13 itself ships Mesa 25.0, which no folder fits: its backports have
+26.1. `vainfo` shows the Mesa version a system has, as in
+`Mesa Gallium driver 26.2.6 for NVA5`.
+
+### Ubuntu: the PPA
 
 The [PPA](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
 has Ubuntu's own Mesa with these patches, for amd64 and i386, so 32-bit games
@@ -42,8 +60,119 @@ sudo apt install ppa-purge
 sudo ppa-purge ppa:francesco-stimola/mesa-nouveau-fixes
 ```
 
-To try hardware decoding without installing anything, see
-[Try it without installing](../README.md#try-it-without-installing).
+### Debian
+
+[`scripts/build-debian-package.sh`](../scripts/build-debian-package.sh)
+rebuilds Debian's own Mesa packages with the patches: it downloads the source
+of Debian's `mesa` package, adds the patches to its `debian/patches` and
+builds every package, as Debian does. On a 4-core machine that takes about
+20 minutes, several times more on an older dual-core one, and about 12 GB
+of disk space, the build dependencies included. After installing the
+packages, the `mesa-nvfix` folder (8 to 9 GB) can be deleted.
+
+apt needs the source entries. On Debian 13, add the backports too:
+
+```sh
+sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/debian.sources
+printf '%s\n' 'Types: deb deb-src' 'URIs: http://deb.debian.org/debian' 'Suites: trixie-backports' 'Components: main' 'Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg' | sudo tee /etc/apt/sources.list.d/backports.sources
+sudo apt update
+```
+
+Systems that still use `/etc/apt/sources.list` need a `deb-src` line for
+each `deb` line there instead. Then install the build dependencies and build,
+from a clone of this repository. On Debian 13 with backports:
+
+```sh
+sudo apt build-dep -t trixie-backports mesa
+./scripts/build-debian-package.sh patches/mesa-26.1 trixie-backports
+```
+
+On Debian testing, `sudo apt build-dep mesa`, then
+`./scripts/build-debian-package.sh patches/mesa-26.1`; on Debian unstable,
+the same with `patches/mesa-26.2`.
+
+The packages end up in `mesa-nvfix`, and the script ends with the
+`sudo apt install` command for the ones the system has: run it. Their
+version ends in `+nvfix1`. When Debian updates Mesa, apt replaces them with
+Debian's own, without the patches: build again, with the folder for the new
+version. The script builds for the system's own architecture only; Mesa's
+packages for other architectures, such as the i386 ones Wine and Steam
+install, must have the same version, so apt will want to remove those.
+
+### Fedora
+
+Fedora builds Mesa without the H.264 decoder, for patent reasons, so even
+without the patches these GPUs only decode MPEG-2 there.
+[`scripts/build-fedora-package.sh`](../scripts/build-fedora-package.sh)
+rebuilds Fedora's own Mesa packages with the patches and with every decoder
+(`-Dvideo-codecs=all`): it downloads Fedora's source package, adds the
+patches to its spec file and builds every package. On a 4-core machine that
+takes about 15 to 20 minutes, several times more on an older dual-core one.
+The build dependencies and the packages take about 3 GB; while it builds,
+the build tree needs several GB more, which rpmbuild removes at the end.
+
+From a clone of this repository, on Fedora 44 or 45:
+
+```sh
+sudo dnf install rpm-build dnf-plugins-core
+./scripts/build-fedora-package.sh patches/mesa-26.2
+```
+
+On Fedora 43, use `patches/mesa-26.0`. The script asks for sudo once, to
+install the build dependencies of the source package it downloaded. The
+packages end up in
+`mesa-nvfix/rpmbuild/RPMS`, and the script ends with the `sudo dnf install`
+command for the ones the system has: run it. Their release ends in
+`.nvfix`, as in `26.2.6-1.fc44.nvfix`.
+
+If RPM Fusion's `mesa-va-drivers-freeworld` is installed, remove it:
+`sudo dnf remove mesa-va-drivers-freeworld`. libva loads that driver before
+the system one, and it has no patches. When Fedora updates Mesa, dnf
+replaces these packages with Fedora's own: build again, with the folder for
+the new version. As on Debian, the script builds for the system's own
+architecture only.
+
+### Try it without installing
+
+The patches touch the VA driver and the nouveau Gallium driver. For a quick
+test, load a patched VA driver for one program and leave the system Mesa
+untouched.
+
+**Prebuilt, for Ubuntu 24.04.** Each
+[release](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)
+has the driver attached, built from the Mesa source Ubuntu 24.04 ships:
+
+```sh
+tar xzf mesa-nouveau-fixes-*-va-driver-ubuntu-24.04.tar.gz
+cd mesa-nouveau-fixes-*-va-driver-ubuntu-24.04
+LIBVA_DRIVERS_PATH=$PWD LIBVA_DRIVER_NAME=nouveau vainfo
+LIBVA_DRIVERS_PATH=$PWD mpv --hwdec=vaapi video.mp4
+```
+
+**From source, on any distribution.**
+[`scripts/build-va-driver.sh`](../scripts/build-va-driver.sh) builds the VA
+driver from a Mesa source tree and a folder of patches. Use the Mesa version
+the system has and the folder that fits it, and Mesa's build dependencies
+(on Debian and Ubuntu, `sudo apt build-dep mesa`; on Fedora,
+`dnf download --source mesa`, then `sudo dnf builddep mesa-*.src.rpm`). For
+Mesa 26.2.6:
+
+```sh
+git clone --depth 1 --branch mesa-26.2.6 https://gitlab.freedesktop.org/mesa/mesa.git mesa-26.2.6
+./scripts/build-va-driver.sh mesa-26.2.6 patches/mesa-26.2 out
+LIBVA_DRIVERS_PATH=$PWD/out LIBVA_DRIVER_NAME=nouveau vainfo
+```
+
+This driver supports Wayland and DRM displays, which is what Firefox and mpv
+use on a Wayland desktop. X11 applications need a full Mesa build. 0004
+fixes the OpenGL driver and 0011 the GBM import Chromium uses, which this VA
+driver does not replace either; [`TESTING.md`](TESTING.md#7-uniform-buffer-updates-reach-their-buffer-0004)
+shows how to try a full build for a single program.
+
+Firefox reads VA drivers only from system directories inside its RDD sandbox.
+To test a driver from another directory, also set `MOZ_DISABLE_RDD_SANDBOX=1`
+for that run only. Installed packages put the driver in the system
+directories, so Firefox needs neither variable.
 
 ## 2. Video firmware
 
@@ -166,6 +295,8 @@ sudo sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/&nouveau.config=NvClkMode=0xf /' /e
 sudo update-grub
 ```
 
+On Fedora: `sudo grubby --update-kernel=ALL --args=nouveau.config=NvClkMode=0xf`.
+
 The level applies from the next boot. It works on Tesla GPUs (GeForce 8 to
 300) and most Kepler GPUs; Fermi (GeForce 400 and 500) cannot change clocks.
 
@@ -183,8 +314,8 @@ sudo apt install vainfo
 vainfo
 ```
 
-`vainfo` lists H.264, MPEG-2 and VC-1 profiles with `VAEntrypointVLD`; without
-them, the firmware is missing.
+On Fedora the package is `libva-utils`. `vainfo` lists H.264, MPEG-2 and VC-1
+profiles with `VAEntrypointVLD`; without them, the firmware is missing.
 
 In Firefox, open `about:support`: in the *Media* section, the codec support
 table marks hardware decoding as supported for H264. On YouTube, *Stats for

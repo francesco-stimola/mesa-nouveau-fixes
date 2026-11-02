@@ -1,0 +1,107 @@
+name: Packages
+
+# Follows docs/SETUP.md for Debian and Fedora: rebuilds the distribution's
+# whole Mesa with the patches and installs the packages. A full Mesa build
+# takes about half an hour here, so this runs by hand and on test branches
+# only. Each build reports its time and disk use as a notice.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['test/**']
+
+permissions:
+  contents: read
+
+jobs:
+  debian:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: Debian sid, image: 'debian:sid', suite: '', patches: mesa-26.2 }
+          - { name: Debian 13 with backports, image: 'debian:trixie', suite: trixie-backports, patches: mesa-26.1 }
+    container: ${{ matrix.image }}
+    env:
+      SUITE: ${{ matrix.suite }}
+      PATCHES: patches/${{ matrix.patches }}
+    steps:
+      - name: Install the build dependencies
+        run: |
+          df -B1M --output=used / | tail -n 1 > /tmp/used-before
+          sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/debian.sources
+          if [ -n "$SUITE" ]; then
+            printf '%s\n' 'Types: deb deb-src' 'URIs: http://deb.debian.org/debian' \
+              "Suites: $SUITE" 'Components: main' \
+              'Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg' \
+              > /etc/apt/sources.list.d/backports.sources
+          fi
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get build-dep -y ${SUITE:+-t "$SUITE"} mesa
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends dpkg-dev
+
+      - uses: actions/checkout@v7
+
+      - name: Build the packages
+        working-directory: ${{ runner.temp }}
+        shell: bash
+        run: |
+          set -o pipefail
+          start=$(date +%s)
+          "$GITHUB_WORKSPACE/scripts/build-debian-package.sh" "$GITHUB_WORKSPACE/$PATCHES" $SUITE 2>&1 | tee build.log ||
+            { tail -n 10 build.log | sed 's/^/::error::/'; exit 1; }
+          echo "::notice::built in $(( ($(date +%s) - start) / 60 )) min; mesa-nvfix holds $(du -sh mesa-nvfix | cut -f1); disk use grew by $(( $(df -B1M --output=used / | tail -n 1) - $(cat /tmp/used-before) )) MB with the build dependencies"
+
+      - name: Install the drivers
+        working-directory: ${{ runner.temp }}/mesa-nvfix
+        shell: bash
+        run: |
+          set -o pipefail
+          debs=
+          for p in mesa-libgallium mesa-va-drivers libgl1-mesa-dri libgbm1 libegl-mesa0; do
+            for f in "${p}"_*.deb; do [ -f "$f" ] && debs="$debs ./$f"; done
+          done
+          DEBIAN_FRONTEND=noninteractive apt-get install -y $debs 2>&1 | tee install.log ||
+            { tail -n 10 install.log | sed 's/^/::error::/'; exit 1; }
+          echo "::notice::installed $(dpkg-query -W -f '${Package} ${Version}' mesa-libgallium)"
+
+  fedora:
+    name: Fedora ${{ matrix.release }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { release: '43', patches: mesa-26.0 }
+          - { release: '44', patches: mesa-26.2 }
+    container: fedora:${{ matrix.release }}
+    env:
+      PATCHES: patches/${{ matrix.patches }}
+    steps:
+      - name: Install the build tools
+        run: |
+          df -B1M --output=used / | tail -n 1 > /tmp/used-before
+          dnf install -y rpm-build dnf-plugins-core
+
+      - uses: actions/checkout@v7
+
+      - name: Build the packages
+        working-directory: ${{ runner.temp }}
+        shell: bash
+        run: |
+          set -o pipefail
+          start=$(date +%s)
+          "$GITHUB_WORKSPACE/scripts/build-fedora-package.sh" "$GITHUB_WORKSPACE/$PATCHES" 2>&1 | tee build.log ||
+            { tail -n 10 build.log | sed 's/^/::error::/'; exit 1; }
+          echo "::notice::built in $(( ($(date +%s) - start) / 60 )) min; mesa-nvfix holds $(du -sh mesa-nvfix | cut -f1); disk use grew by $(( $(df -B1M --output=used / | tail -n 1) - $(cat /tmp/used-before) )) MB with the build dependencies"
+
+      - name: Install the drivers
+        working-directory: ${{ runner.temp }}/mesa-nvfix/rpmbuild/RPMS
+        shell: bash
+        run: |
+          set -o pipefail
+          dnf install -y $(find . -name '*.rpm' ! -name '*-devel-*') 2>&1 | tee install.log ||
+            { tail -n 10 install.log | sed 's/^/::error::/'; exit 1; }
+          echo "::notice::installed $(rpm -q mesa-dri-drivers); VA driver: $(rpm -qf /usr/lib64/dri/nouveau_drv_video.so)"

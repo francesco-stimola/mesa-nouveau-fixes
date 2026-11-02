@@ -2,7 +2,7 @@ name: Checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'test/**']
   pull_request:
   workflow_dispatch:
 
@@ -55,6 +55,90 @@ jobs:
 
       - name: Build the patched VA driver
         run: ./scripts/build-va-driver.sh "$MESA_SRC" "patches/${{ matrix.patches }}" "$RUNNER_TEMP/out"
+
+  debian:
+    # Debian's Mesa source with Debian's own patches, as a rebuilt package
+    # uses it (docs/SETUP.md). dpkg-source applies patches without
+    # fuzz, so the series has to apply exactly.
+    name: Patches build with ${{ matrix.name }} Mesa
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: Debian sid, image: 'debian:sid', suite: sid, patches: mesa-26.2 }
+          - { name: Debian testing, image: 'debian:testing', suite: testing, patches: mesa-26.1 }
+          - { name: Debian 13 backports, image: 'debian:trixie', suite: trixie-backports, patches: mesa-26.1 }
+    container: ${{ matrix.image }}
+    env:
+      SUITE: ${{ matrix.suite }}
+      PATCHES: patches/${{ matrix.patches }}
+    steps:
+      - name: Install the build dependencies
+        run: |
+          sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/debian.sources
+          if [ "$SUITE" = trixie-backports ]; then
+            printf '%s\n' 'Types: deb deb-src' 'URIs: http://deb.debian.org/debian' \
+              'Suites: trixie-backports' 'Components: main' \
+              'Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg' \
+              > /etc/apt/sources.list.d/backports.sources
+          fi
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get build-dep -y -t "$SUITE" mesa
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends dpkg-dev patch
+
+      - uses: actions/checkout@v7
+
+      - name: Fetch Debian's Mesa source
+        working-directory: ${{ runner.temp }}
+        run: |
+          apt-get source -t "$SUITE" mesa
+          src=$(ls -d "$RUNNER_TEMP"/mesa-*/)
+          echo "Debian mesa $(dpkg-parsechangelog -l "$src/debian/changelog" -S Version)"
+          echo "MESA_SRC=$src" >> "$GITHUB_ENV"
+
+      - name: Check that the patches apply without fuzz
+        run: ./scripts/check-exact.sh "$MESA_SRC" "$PATCHES"
+
+      - name: Build the patched VA driver
+        run: ./scripts/build-va-driver.sh "$MESA_SRC" "$PATCHES" "$RUNNER_TEMP/out"
+
+  fedora:
+    # Fedora's Mesa source as rpmbuild prepares it, Fedora's patches
+    # included. Fedora applies patches without fuzz too.
+    name: Patches build with Fedora ${{ matrix.release }} Mesa
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { release: '43', patches: mesa-26.0 }
+          - { release: '44', patches: mesa-26.2 }
+    container: fedora:${{ matrix.release }}
+    env:
+      PATCHES: patches/${{ matrix.patches }}
+    steps:
+      - name: Install the build dependencies
+        run: |
+          dnf install -y dnf-plugins-core rpm-build patch
+          dnf download --source mesa
+          rpm -i mesa-*.src.rpm
+          dnf builddep -y ~/rpmbuild/SPECS/mesa.spec
+
+      - uses: actions/checkout@v7
+
+      - name: Prepare Fedora's Mesa source
+        run: |
+          rpmbuild -bp ~/rpmbuild/SPECS/mesa.spec > /dev/null
+          src=$(dirname "$(find ~/rpmbuild/BUILD -maxdepth 3 -name meson.options -path '*/mesa-*' | head -n 1)")
+          echo "Fedora mesa $(rpm -q --qf '%{VERSION}-%{RELEASE}\n' --specfile ~/rpmbuild/SPECS/mesa.spec | head -n 1) in $src"
+          echo "MESA_SRC=$src" >> "$GITHUB_ENV"
+
+      - name: Check that the patches apply without fuzz
+        run: ./scripts/check-exact.sh "$MESA_SRC" "$PATCHES"
+
+      - name: Build the patched VA driver
+        run: ./scripts/build-va-driver.sh "$MESA_SRC" "$PATCHES" "$RUNNER_TEMP/out"
 
   mesa-main:
     name: Patches apply to Mesa main

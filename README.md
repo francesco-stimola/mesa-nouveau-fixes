@@ -83,6 +83,13 @@ takes the tiling from the format of the first plane. Firefox and mpv import
 the two planes separately and were not affected, nor were GeForce 8 to 300
 GPUs. Youssef Mahmoud reported this on a GK104 and tested the fix
 ([issue #2](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/2)).
+Below, his Brave logs on that GPU, with the other ten patches and with all
+eleven.
+
+<p align="center">
+  <img src="assets/brave-import.gif" width="100%"
+       alt="Brave's log on a Kepler GK104. Without 0011: gbm_bo_import returns nullptr, the frame buffer cannot be created and the GPU process restarts, 3 times in 4 seconds, then the video plays with software decoding. With 0011: no such errors, and brave://media-internals shows VaapiVideoDecoder as a hardware decoder.">
+</p>
 
 ### GPU errors and freezes
 

@@ -57,3 +57,14 @@ top, run with each driver and shortened by hand: long lines are cut to fit,
 and repeated Firefox log lines are counted instead of listed. The left side
 of 0006 is the kernel log from 17 October 2026, when the bug was found, not a
 new run: every run of that bug hangs the GPU until a reboot.
+
+0011 changes nothing on the GT 240M. Its transcripts are Youssef Mahmoud's
+Brave logs on a Kepler GK104, attached to
+[issue #2](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/2)
+and used with his permission: Mesa main with the other ten patches, then
+with all eleven. The last lines on the right come from his screenshot of
+`brave://media-internals`.
+
+```sh
+python3 term-gif.py term/0011-before.txt term/0011-after.txt brave-import.gif 0011
+```

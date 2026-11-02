@@ -1,0 +1,5 @@
+$ brave-browser --ozone-platform=wayland --enable-features=…
++ (no gbm_bo_import errors, no GPU process restarts)
+# brave://media-internals:
++ Decoder name: VaapiVideoDecoder
++ Hardware decoder: true

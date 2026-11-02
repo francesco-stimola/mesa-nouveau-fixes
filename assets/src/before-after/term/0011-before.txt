@@ -1,0 +1,7 @@
+$ brave-browser --ozone-platform=wayland --enable-features=…
+! gbm_wrapper.cc: nullptr returned from gbm_bo_import
+! Cannot create bo with format=(Y_UV, 420, 8unorm, ExtSamplerOn)
+! CreateSharedImage: could not create backing.
+! Restarting GPU process due to unrecoverable error. Context was lost.
+! GPU process exited unexpectedly: exit_code=8704
+# 3 times in 4 s, then the video plays with software decoding

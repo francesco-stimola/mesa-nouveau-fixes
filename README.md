@@ -363,7 +363,7 @@ that is allowed to use VA-API, and fixed GPU clocks.
 - **Brave** blocks VA-API on NVIDIA GPUs too, and decodes in hardware with a
   few command-line options ([how](docs/SETUP.md#brave-and-other-chromium-browsers)).
   Other Chromium-based browsers take the same options; only Brave was
-  tested.
+  tested. On Kepler, Brave still falls back to software decoding.
 - **GPU clocks**, below.
 
 These decoders handle H.264, MPEG-2 and VC-1 only. VP4 (GT21x) is designed for

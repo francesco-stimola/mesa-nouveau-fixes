@@ -328,5 +328,35 @@ instead of `$NVFIX`. Start Brave from a terminal with the options in
 [SETUP.md](SETUP.md#brave-and-other-chromium-browsers) and play an H.264
 video. Without 0011 its log repeats `nullptr returned from gbm_bo_import`
 and `Restarting GPU process due to unrecoverable error`, and playback falls
-back to software decoding. With 0011 there are no such lines, and
-`brave://media-internals` shows `VaapiVideoDecoder` for the whole video.
+back to software decoding; on a GT 710 the log repeats
+`eglCreateImage failed with 0x3009` instead, and the picture is garbled.
+With 0011 there are no such lines, and `brave://media-internals` shows
+`VaapiVideoDecoder` for the whole video.
+
+## 15. glClearTexImage clears textures (0001)
+
+0001 also fixes `glClearTexImage` in the OpenGL driver: since Mesa 25.2 it
+reaches the same clear hooks with a template on the stack. Kush Chandak wrote
+two reproducers. [`tests/cleartex.c`](../tests/cleartex.c) clears a depth
+texture and a colour texture, reads them back and counts the texels that are
+wrong; the exit status is 1 if any are. With the Mesa build of check 7:
+
+```sh
+cc -O0 tests/cleartex.c -o cleartex -ldl
+./cleartex
+LD_LIBRARY_PATH=$HOME/nvfix-gl ./cleartex
+```
+
+[`tests/clear-test.html`](../tests/clear-test.html) does the same through
+WebGL: 1980 checks on colour and depth textures of several formats, sizes
+and layouts. Open it in a Chromium-based browser, whose ANGLE clears new
+textures with `glClearTexImage`, with the whole patched Mesa as in check 14;
+the result appears on the page at the end. With stock Mesa, both can make
+the kernel log GPU errors.
+
+Kush's results on a GT 710 (Kepler) with Mesa 26.0.8:
+
+| | `cleartex`: depth texels wrong | `cleartex`: colour texels wrong | `clear-test.html` |
+|---|---|---|---|
+| Stock Mesa | 4094 of 4096 | 4096 of 4096 | context lost after 9 checks; the kernel logs `DATA_ERROR` and `ZETA_STORAGE_TYPE_MISMATCH` |
+| With the patches | 0 | 0 | 1980 of 1980 pass, no kernel messages |

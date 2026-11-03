@@ -83,7 +83,11 @@ takes the tiling from the format of the first plane. Firefox and mpv import
 the two planes separately and were not affected, nor were GeForce 8 to 300
 GPUs. Youssef Mahmoud reported this on a GK104 and tested the fix
 ([issue #2](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/2)).
-Below, his Brave logs on that GPU, with the other ten patches and with all
+Kush Chandak confirmed it on a GT 710 (GK208B), where the import failed in
+`eglCreateImage` instead: 582 failures in 15 seconds and a garbled picture
+before, none and a correct picture with 0011
+([issue #1](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/1#issuecomment-6597693583)).
+Below, Brave's logs on the GK104, with the other ten patches and with all
 eleven.
 
 <p align="center">
@@ -107,7 +111,9 @@ ANGLE clears every new WebGL texture that way, so on Kepler the GPU process
 of Chromium-based browsers such as Brave crashes after a few minutes of
 browsing, and clears that don't crash leave the texture unchanged.
 Kush Chandak found this and tested the fix on a GeForce GT 710
-([!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340)).
+([!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340)),
+with two reproducers that are now in `tests/`
+([check 15](docs/TESTING.md#15-glclearteximage-clears-textures-0001)).
 
 <p align="center">
   <img src="assets/video-start-traps.gif" width="100%"
@@ -394,7 +400,8 @@ the level at boot avoids both.
 [`docs/TESTING.md`](docs/TESTING.md) lists the checks used for the results
 above: kernel traps, export with mpv, frame comparison with software decoding,
 H.264 conformance, decoders stopped early, conversion to three-plane formats,
-YUYV and UYVY surfaces, monochrome and interlaced H.264, and Firefox logs.
+YUYV and UYVY surfaces, monochrome and interlaced H.264, Firefox logs,
+Brave's frame imports and texture clears.
 
 ## License
 

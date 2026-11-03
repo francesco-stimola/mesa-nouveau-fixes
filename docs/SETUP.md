@@ -260,13 +260,23 @@ Other Chromium-based browsers, such as Chromium, Google Chrome or Vivaldi,
 use the same code and take the same options on their command line; this was
 not tested.
 
-These options were tested on a GT 240M under GNOME (Zorin OS 18). On a
-Kepler GT 710 under KDE Plasma on Wayland, Brave's default OpenGL backend
-showed no frames at all, with or without VA-API; this has not been tried on
-KDE here. On Fermi and Kepler, Brave needs 0011: without it, its GPU process
-restarts when it creates the frame buffers (`gbm_bo_import` fails in its
-log) and playback falls back to software decoding. With it, Brave decodes in
-hardware on a Kepler GK104 under GNOME.
+These options were tested on a GT 240M under GNOME (Zorin OS 18). On Fermi
+and Kepler, Brave needs 0011: without it, its GPU process cannot import the
+decoded frames (`gbm_bo_import` or `eglCreateImage` fails in its log), and
+playback falls back to software decoding or shows a garbled picture. With
+it, Brave decodes in hardware on a Kepler GK104 under GNOME and on a GT 710
+under KDE Plasma, with the workaround below.
+
+Under KDE Plasma on Wayland, Chromium-based browsers stop after three
+frames on nouveau, with or without VA-API. This is a Chromium bug: KWin
+offers explicit sync (`wp_linux_drm_syncobj`), Chromium then expects it for
+every buffer, and with a driver that lacks `EGL_ANDROID_native_fence_sync`,
+such as nouveau, it stops listening for the buffers KWin hands back. GNOME
+does not offer explicit sync to nouveau, so it is not affected. Kush Chandak
+traced this on a GT 710 and posted a workaround in
+[issue #1](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/1#issuecomment-6597693583):
+a small `LD_PRELOAD` library that shows only the browser an older kernel
+version, so that Chromium leaves explicit sync off.
 
 ### Sites that serve H.264
 

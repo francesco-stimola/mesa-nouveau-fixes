@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+- **Tests.** [`tests/cleartex.c`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/cleartex.c)
+  and [`tests/clear-test.html`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/clear-test.html),
+  Kush Chandak's reproducers for the `glClearTexImage` bug that 0001 fixes,
+  in OpenGL and in WebGL;
+  [check 15](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/TESTING.md#15-glclearteximage-clears-textures-0001)
+  says how to run them and what they gave on a GT 710.
+- **0011 on a GT 710.** Kush Chandak confirmed 0011 on a GT 710 (GK208B),
+  where Brave's import failed in `eglCreateImage` and the picture was
+  garbled; the README and check 14 say so.
+- **KDE Plasma.** SETUP.md explains why Chromium-based browsers stop after
+  three frames under KDE Plasma on nouveau, a Chromium bug with explicit
+  sync, and links Kush Chandak's workaround.
+- **0001.** The message no longer carries Kush Chandak's Tested-by, as in
+  Mesa !45340 ([issue #1](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/1#issuecomment-6597693583));
+  the code is unchanged.
+
 ## 1.5.0 - 2026-11-02
 
 - **Debian and Fedora.** Two new folders of patches:
@@ -37,7 +55,7 @@
   playback fell back to software decoding. Youssef Mahmoud reported it and
   tested the fix on a GK104
   ([check 14](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/TESTING.md#14-brave-imports-decoded-frames-0011));
-  the README shows it before and after with his Brave logs.
+  the README shows it before and after with Brave's logs from that GPU.
 - **README.** Each fix now has one place: a short description with its
   before/after GIF, grouped by what users see. The results are one table,
   the patch table shows which ones are in review upstream, and the GPU
@@ -49,7 +67,7 @@
   hooks that 0001 fixes with a template on the stack, so 0001 also fixes
   OpenGL texture clears: on Kepler, WebGL in Chromium-based browsers crashed
   the GPU process. Kush Chandak found this and tested it on a GeForce GT
-  710, where he also confirmed hardware decoding with all ten patches. The
+  710, where Kush also confirmed hardware decoding with all ten patches. The
   message of 0001 now says so, with `Fixes: 718e277ab56e`; the README marks
   0001 for G80 too and notes the two kernel fixes Kepler needs, with the
   kernel versions that need them (6.2 and 6.6). SETUP.md says which desktop

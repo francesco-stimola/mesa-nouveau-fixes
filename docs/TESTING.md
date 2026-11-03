@@ -324,9 +324,9 @@ of their frames wrong, the patched driver none.
 
 GF100 and later GPUs only. Brave imports frames through GBM and EGL, not the
 VA driver, so this check needs the whole patched Mesa, such as the PPA's,
-instead of `$NVFIX`. Start Brave from a terminal with the options in
-[SETUP.md](SETUP.md#brave-and-other-chromium-browsers) and play an H.264
-video. Without 0011 its log repeats `nullptr returned from gbm_bo_import`
+instead of `$NVFIX`. Start Brave from a terminal, with the options in
+[SETUP.md](SETUP.md#brave-and-other-chromium-browsers) if your version needs
+them, and play an H.264 video. Without 0011 its log repeats `nullptr returned from gbm_bo_import`
 and `Restarting GPU process due to unrecoverable error`, and playback falls
 back to software decoding; on a GT 710 the log repeats
 `eglCreateImage failed with 0x3009` instead, and the picture is garbled.
@@ -354,9 +354,27 @@ textures with `glClearTexImage`, with the whole patched Mesa as in check 14;
 the result appears on the page at the end. With stock Mesa, both can make
 the kernel log GPU errors.
 
-Kush's results on a GT 710 (Kepler) with Mesa 26.0.8:
+With the PPA installed, `cleartex` can also run on Ubuntu's own Mesa without
+removing the PPA: download the two packages in the version the PPA's is
+built from (`apt-cache policy mesa-libgallium` lists it, without `+nvfix`),
+extract them and point the EGL loader at them:
+
+```sh
+v=25.2.8-0ubuntu0.24.04.4
+apt-get download mesa-libgallium=$v libegl-mesa0=$v
+for d in *.deb; do dpkg-deb -x $d stock; done
+L=$PWD/stock/usr/lib/x86_64-linux-gnu
+echo "{\"file_format_version\":\"1.0.0\",\"ICD\":{\"library_path\":\"$L/libEGL_mesa.so.0\"}}" > stock.json
+__EGL_VENDOR_LIBRARY_FILENAMES=$PWD/stock.json LD_LIBRARY_PATH=$L ./cleartex
+```
+
+The first line printed then names the version without `+nvfix`. Results on
+the GT 710 (Kepler) are Kush's, with Mesa 26.0.8; those on the GT 240M ours,
+with Mesa 25.2.8:
 
 | | `cleartex`: depth texels wrong | `cleartex`: colour texels wrong | `clear-test.html` |
 |---|---|---|---|
-| Stock Mesa | 4094 of 4096 | 4096 of 4096 | context lost after 9 checks; the kernel logs `DATA_ERROR` and `ZETA_STORAGE_TYPE_MISMATCH` |
-| With the patches | 0 | 0 | 1980 of 1980 pass, no kernel messages |
+| GT 710, stock Mesa | 4094 of 4096 | 4096 of 4096 | context lost after 9 checks; the kernel logs `DATA_ERROR` and `ZETA_STORAGE_TYPE_MISMATCH` |
+| GT 710, with the patches | 0 | 0 | 1980 of 1980 pass, no kernel messages |
+| GT 240M, stock Mesa | 4083 of 4096 | 4096 of 4096 | not run; `cleartex` makes the kernel log `DATA_ERROR` (`INVALID_VALUE` on method `0fe4`) and a `DMA_PUSHER` error |
+| GT 240M, with the patches | 0 | 0 | 1980 of 1980 pass, no kernel messages |

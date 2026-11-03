@@ -7,7 +7,15 @@
   Kush Chandak's reproducers for the `glClearTexImage` bug that 0001 fixes,
   in OpenGL and in WebGL;
   [check 15](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/TESTING.md#15-glclearteximage-clears-textures-0001)
-  says how to run them and what they gave on a GT 710.
+  says how to run them, also on Ubuntu's own Mesa with the PPA installed,
+  and what they gave on a GT 710 and on the GT 240M. On the GT 240M, stock
+  Mesa 25.2.8 leaves nearly every texel uncleared and the kernel logs
+  `DATA_ERROR`; with the patches every texel is right and all 1980 WebGL
+  checks pass. The README's results have a row for it.
+- **Brave without options.** Brave 1.98 decodes in hardware with nouveau on
+  its own: on the GT 240M it picked `VaapiVideoDecoder` and Wayland with no
+  options, with the same CPU use as with them. SETUP.md now says how to
+  check, and keeps the options for browsers that still need them.
 - **0011 on a GT 710.** Kush Chandak confirmed 0011 on a GT 710 (GK208B),
   where Brave's import failed in `eglCreateImage` and the picture was
   garbled; the README and check 14 say so.

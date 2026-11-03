@@ -232,10 +232,17 @@ profile only, set it to `true` in `about:config` instead.
 
 ### Brave and other Chromium browsers
 
-Brave, like Chromium, blocks VA-API on NVIDIA GPUs and uses it on Linux only
-when asked to. With these options Brave 1.97 (Chromium 155) decodes in
-hardware on GNOME's Wayland desktop, local files and YouTube alike
-(`brave://media-internals` shows `VaapiVideoDecoder`):
+Brave 1.98 (Chromium 156) decodes in hardware with nouveau without any
+options: on the GT 240M under GNOME it picked `VaapiVideoDecoder` and Wayland
+by itself, and used as much CPU as with the options below. To check, play a
+video and open `brave://media-internals`: the player's `kVideoDecoderName`
+is `VaapiVideoDecoder` when the GPU decodes, `FFmpegVideoDecoder` when the
+CPU does.
+
+If it shows `FFmpegVideoDecoder`, as Chromium does when it blocks VA-API on
+NVIDIA GPUs, start Brave with these options. With them Brave 1.97
+(Chromium 155) decoded in hardware on GNOME's Wayland desktop, local files
+and YouTube alike:
 
 ```
 --ozone-platform=wayland --enable-features=AcceleratedVideoDecodeLinuxGL,AcceleratedVideoDecodeLinuxZeroCopyGL,VaapiOnNvidiaGPUs,VaapiIgnoreDriverChecks

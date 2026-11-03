@@ -240,6 +240,7 @@ H.264 decoding is exact, so a correct decoder differs on no frame.
 | FFmpeg's H.264 conformance streams that VP4 decodes | 2784 frames in 48 of 163 streams differ | **none** |
 | Kernel errors during all of the above | `SURF_HEIGHT_OVERRUN` at every video start | **none** |
 | Uniform buffer readbacks, [`tests/ubo-two-contexts.c`](tests/ubo-two-contexts.c): two contexts, one context orphaning its buffer | 40 of 40 and 20 of 20 wrong | **none wrong** |
+| Texture clears with `glClearTexImage`, [`tests/cleartex.c`](tests/cleartex.c): depth and colour | 4083 and 4096 of 4096 texels wrong, `DATA_ERROR` in the kernel log | **none wrong, no kernel errors** |
 
 The other 14 streams of the conformance suite use Extended profile features
 or Baseline FMO and ASO, which ffmpeg does not decode through VA-API.

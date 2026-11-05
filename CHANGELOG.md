@@ -21,7 +21,8 @@
   garbled; the README and check 14 say so.
 - **KDE Plasma.** SETUP.md explains why Chromium-based browsers stop after
   three frames under KDE Plasma on nouveau, a Chromium bug with explicit
-  sync, and links Kush Chandak's workaround.
+  sync, and links Kush Chandak's workaround and the
+  [Chromium report](https://issues.chromium.org/issues/582204270).
 - **0001.** The message no longer carries Kush Chandak's Tested-by, as in
   Mesa !45340 ([issue #1](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/1#issuecomment-6597693583));
   the code is unchanged.

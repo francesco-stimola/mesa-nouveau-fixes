@@ -283,7 +283,8 @@ does not offer explicit sync to nouveau, so it is not affected. Kush Chandak
 traced this on a GT 710 and posted a workaround in
 [issue #1](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/1#issuecomment-6597693583):
 a small `LD_PRELOAD` library that shows only the browser an older kernel
-version, so that Chromium leaves explicit sync off.
+version, so that Chromium leaves explicit sync off. The bug is reported to
+Chromium as [issue 582204270](https://issues.chromium.org/issues/582204270).
 
 ### Sites that serve H.264
 

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Mesa.** 0008 and 0001 are also in a merge request of their own,
+  [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135),
+  as Dave Airlie asked in !45340; they stay in !45340 too.
 - **Tests.** [`tests/cleartex.c`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/cleartex.c)
   and [`tests/clear-test.html`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/clear-test.html),
   Kush Chandak's reproducers for the `glClearTexImage` bug that 0001 fixes,

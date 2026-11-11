@@ -13,6 +13,8 @@
 #   SIGN_KEY    key to sign with; unset: leave the upload unsigned
 #   GPG_PASSPHRASE_FILE  file with the key's passphrase
 #   SOURCE_URL  link written in the changelog (default: this repository)
+#   SOURCE_REF  tag or commit of the patches, written in the changelog
+#               (default: $GITHUB_SHA, or the commit of the patch dir)
 set -eu
 
 series=$1
@@ -85,7 +87,7 @@ quilt push -a > ../quilt.log 2>&1 || {
 	exit 1
 }
 
-commit=${GITHUB_SHA:-$(git -C "$patches" rev-parse HEAD 2> /dev/null || echo unknown)}
+commit=${SOURCE_REF:-${GITHUB_SHA:-$(git -C "$patches" rev-parse HEAD 2> /dev/null || echo unknown)}}
 {
 	printf 'mesa (%s) %s; urgency=medium\n\n' "$version" "$series"
 	printf '  * Ubuntu mesa %s with the patches from\n' "$ubuntu"

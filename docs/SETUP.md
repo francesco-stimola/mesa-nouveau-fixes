@@ -11,12 +11,16 @@ and Fedora.
 4. [GPU clocks](#4-gpu-clocks)
 5. [Check that it works](#5-check-that-it-works)
 
-Run the scripts from a clone of this repository:
+Run the scripts from a clone of this repository, at its latest release:
 
 ```sh
 git clone https://github.com/francesco-stimola/mesa-nouveau-fixes.git
 cd mesa-nouveau-fixes
+git checkout "$(git describe --tags --abbrev=0)"
 ```
+
+`main` may already hold patches that are still in review in Mesa. The
+releases are what the PPA and the prebuilt drivers use.
 
 ## 1. Mesa with the patches
 

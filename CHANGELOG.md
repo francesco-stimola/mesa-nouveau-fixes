@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Releases first.** SETUP.md now checks out the latest release after
+  cloning, and the PPA takes its patches from the latest release tag
+  instead of `main`, which may hold patches still in review in Mesa. The
+  PPA workflow also stops when Launchpad does not answer, instead of
+  building a `+nvfix1`, and times out stalled uploads.
 - **Mesa.** 0008 and 0001 are also in a merge request of their own,
   [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135),
   as Dave Airlie asked in !45340; they stay in !45340 too.

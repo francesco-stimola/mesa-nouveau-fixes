@@ -38,8 +38,14 @@ for v in $(apt-cache showsrc mesa | awk '/^Version:/ { print $2 }'); do
 done
 [ -n "$ubuntu" ] || { say "no mesa source in the apt sources"; exit 1; }
 
-# Newest mesa version in the PPA for this series, pending or published.
-current=$(curl -fsS "$api/~$owner/+archive/ubuntu/$name?ws.op=getPublishedSources&source_name=mesa&exact_match=true&order_by_date=true&distro_series=$api/ubuntu/$series" |
+# Newest mesa version in the PPA for this series, pending or published. If
+# Launchpad does not answer, stop: an empty answer would read as an empty
+# PPA and build a +nvfix1.
+published=$(curl -fsS --retry 3 --retry-delay 20 --max-time 60 "$api/~$owner/+archive/ubuntu/$name?ws.op=getPublishedSources&source_name=mesa&exact_match=true&order_by_date=true&distro_series=$api/ubuntu/$series") || {
+	say "cannot read the PPA's mesa versions from Launchpad"
+	exit 1
+}
+current=$(printf '%s' "$published" |
 	jq -r '[.entries[] | select(.status == "Published" or .status == "Pending")][0].source_package_version // empty')
 
 say "$series: Ubuntu has mesa $ubuntu, the PPA has ${current:-nothing}"
@@ -116,6 +122,11 @@ if [ "$dry_run" = 1 ]; then
 	say "dry run: not uploading $changes"
 	ls -la "$work"/*.dsc "$work"/*.changes
 else
-	dput "ppa:$owner/$name" "$changes"
+	# dput has no timeout of its own: a stalled FTP login once hung a job
+	# until GitHub's 6-hour limit.
+	timeout 20m dput "ppa:$owner/$name" "$changes" || {
+		say "the upload of $version for $series failed or timed out"
+		exit 1
+	}
 	say "uploaded $version for $series"
 fi

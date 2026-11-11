@@ -60,6 +60,9 @@ jobs:
     needs: series
     runs-on: ubuntu-24.04
     environment: ppa
+    # A normal run takes a few minutes; a stalled connection to Launchpad
+    # must not hold the job for GitHub's 6-hour default.
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.series.outputs.matrix) }}

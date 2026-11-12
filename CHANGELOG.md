@@ -29,6 +29,10 @@
   driver.
 - **CI.** The check against Mesa main applies the patches one at a time,
   since 0013 changes lines that 0001 adds.
+- **Kepler kernel fixes.** The README no longer says whether Risto
+  Pajula's kernel fixes are merged: it points to the nouveau list, where
+  that can be followed, and to the separate commit that fixes the first
+  one in Linux 7.4-rc2.
 - **Tests.** [`tests/cleartex.c`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/cleartex.c)
   and [`tests/clear-test.html`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/clear-test.html),
   Kush Chandak's reproducers for the `glClearTexImage` bug that 0001 fixes,

@@ -345,11 +345,14 @@ lack; it was tested on Kepler.
 
 On Kepler, Kush Chandak tested all ten patches on a GeForce GT 710
 (GK208B): H.264 and MPEG-2 decode at 1080p, H.264 identical to software
-decoding, with no kernel errors. Kepler also needs two kernel fixes by
-Risto Pajula, not merged yet: since Linux 6.2 the video engines fault on
-the first frame, and since Linux 6.6 every frame also waits 30 seconds.
-On these kernels decoding fails whatever Mesa does:
+decoding, with no kernel errors. Kepler also needs two kernel fixes:
+since Linux 6.2 the video engines fault on the first frame, and since
+Linux 6.6 every frame also waits 30 seconds. Without them decoding fails
+whatever Mesa does. Risto Pajula posted both to the nouveau list, where
+you can follow whether they are merged:
 [patches](https://lore.kernel.org/nouveau/20260913201225.5975-1-or.pajula@gmail.com/).
+Linux 7.4-rc2 fixes the first one with a separate commit,
+[0820004c342a](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0820004c342af7ca1b01d0b21e0d5d99ad5c10eb).
 Youssef Mahmoud also decodes H.264 in hardware on a GK104 with the patches
 and these kernel fixes, in Firefox, mpv and, with 0011, Brave and Discord.
 

@@ -330,7 +330,11 @@ and 700 models use Fermi or Maxwell chips: check the chipset.
 0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
 with or without video decoding; so do 0001 and 0013, for texture clears on
 every GPU from G80 on, Maxwell and later included, and 0012, for the same
-clears on the NV30 and NV40 families. 0003 changes code every nouveau GPU
+clears on the NV30 and NV40 families. From Turing on (NV16x and later),
+Mesa 25.2 and later run OpenGL through Zink on NVK, Mesa's Vulkan driver,
+when the kernel is recent enough, and from Blackwell on always: there 0001
+and 0013 only matter with nouveau's own OpenGL driver, which
+`NOUVEAU_USE_ZINK=0` selects up to Ada. 0003 changes code every nouveau GPU
 runs; the failure it fixes shows up when a program re-creates a video
 decoder. VP2 GPUs set the two parameters 0009 and 0010 correct in the same
 way, in their own decoder code (`nv84_video_bsp.c`, `nv84_video_vp.c`);

@@ -33,6 +33,9 @@
   Pajula's kernel fixes are merged: it points to the nouveau list, where
   that can be followed, and to the separate commit that fixes the first
   one in Linux 7.4-rc2.
+- **Issues.** New issues use a form that asks for the GPU, kernel, Mesa
+  and kernel log, and the README says where problems outside these
+  patches go: the nouveau kernel driver and Mesa have their own trackers.
 - **Tests.** [`tests/cleartex.c`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/cleartex.c)
   and [`tests/clear-test.html`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/clear-test.html),
   Kush Chandak's reproducers for the `glClearTexImage` bug that 0001 fixes,

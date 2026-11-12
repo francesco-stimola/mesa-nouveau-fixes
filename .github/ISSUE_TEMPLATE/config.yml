@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Kernel problems
+    url: https://gitlab.freedesktop.org/drm/nouveau/-/issues
+    about: The nouveau kernel driver, including the Kepler video fixes and development kernels such as linux-next.
+  - name: Mesa problems that also happen without these patches
+    url: https://gitlab.freedesktop.org/mesa/mesa/-/work_items
+    about: Mesa's own tracker.

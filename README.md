@@ -438,6 +438,20 @@ H.264 conformance, decoders stopped early, conversion to three-plane formats,
 YUYV and UYVY surfaces, monochrome and interlaced H.264, Firefox logs,
 Brave's frame imports and texture clears.
 
+## Reporting problems
+
+[Open an issue](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/new/choose)
+when something goes wrong with these patches, or a problem they fix is
+still there. The form asks for the GPU, kernel, Mesa and kernel log: the
+patches were tested here only on a GeForce GT 240M, so a report from
+another GPU can only be looked into with them.
+
+Other problems belong to their own projects: the kernel, including the
+Kepler video fixes and development kernels such as linux-next, to
+[nouveau](https://gitlab.freedesktop.org/drm/nouveau/-/issues); Mesa
+problems that also happen without these patches to
+[Mesa](https://gitlab.freedesktop.org/mesa/mesa/-/work_items).
+
 ## License
 
 MIT, like the Mesa files the patches modify. See [LICENSE](LICENSE).

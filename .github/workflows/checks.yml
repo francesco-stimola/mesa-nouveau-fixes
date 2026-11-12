@@ -147,10 +147,14 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Check that the patches apply
+        # One at a time: git apply does not chain patches that change the
+        # same lines, as 0001 and 0013 do.
         run: |
           git clone --depth 1 https://gitlab.freedesktop.org/mesa/mesa.git "$RUNNER_TEMP/mesa"
           git -C "$RUNNER_TEMP/mesa" log -1 --format='Mesa main at %h (%cs)'
-          git -C "$RUNNER_TEMP/mesa" apply --check "$GITHUB_WORKSPACE"/patches/mesa-main/*.patch
+          for p in "$GITHUB_WORKSPACE"/patches/mesa-main/*.patch; do
+            git -C "$RUNNER_TEMP/mesa" apply "$p" || { echo "::error::$(basename "$p") does not apply"; exit 1; }
+          done
 
   scripts:
     name: Shell scripts

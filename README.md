@@ -440,11 +440,23 @@ Brave's frame imports and texture clears.
 
 ## Reporting problems
 
-[Open an issue](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/new/choose)
-when something goes wrong with these patches, or a problem they fix is
-still there. The form asks for the GPU, kernel, Mesa and kernel log: the
-patches were tested here only on a GeForce GT 240M, so a report from
-another GPU can only be looked into with them.
+Before opening an issue:
+
+- use the latest release of the patches (the PPA has it);
+- check that the [table above](#which-gpus-need-which-patches) lists your
+  GPU and, on Kepler, that your kernel has both video fixes listed under it;
+- run the checks in [SETUP.md, section 5](docs/SETUP.md#5-check-that-it-works):
+  if `vainfo` lists no profiles, the firmware is missing;
+- try once with hardware decoding turned off: if the problem stays, it
+  probably isn't in these patches.
+
+For a problem with these patches,
+[open an issue](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/new/choose)
+with the form: it asks for the GPU, kernel, Mesa and kernel log, since the
+patches were tested here only on a GeForce GT 240M and a report from
+another GPU can only be looked into with them. For a question, a blank
+issue is fine; the GPU, `uname -r` and the Mesa version from `glxinfo -B`
+still help.
 
 Other problems belong to their own projects: the kernel, including the
 Kepler video fixes and development kernels such as linux-next, to

@@ -4,9 +4,15 @@ body:
   - type: markdown
     attributes:
       value: |
-        This repository covers only the Mesa patches here. Kernel problems, and Mesa problems that also happen without these patches, belong to their own projects (links on the previous page).
+        This repository covers only the Mesa patches here. Kernel problems, and Mesa problems that also happen without these patches, belong to their own projects (links on the previous page). For a question, a blank issue is fine.
 
-        The patches were tested here only on a GeForce GT 240M. A report from another GPU can only be looked into with the logs asked below.
+        Before opening:
+        - use the latest release of the patches (the PPA has it);
+        - check that the [GPU table](https://github.com/francesco-stimola/mesa-nouveau-fixes#which-gpus-need-which-patches) lists your GPU and, on Kepler, that your kernel has both video fixes listed under it;
+        - run the checks in [SETUP.md, section 5](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/docs/SETUP.md#5-check-that-it-works): if `vainfo` lists no profiles, the firmware is missing;
+        - try once with hardware decoding turned off: if the problem stays, it probably isn't in these patches.
+
+        The patches were tested here only on a GeForce GT 240M, so a report from another GPU can only be looked into with the logs asked below.
   - type: checkboxes
     id: kernel
     attributes:

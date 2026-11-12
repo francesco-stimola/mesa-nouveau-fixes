@@ -1,5 +1,8 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
+  - name: Before you report
+    url: https://github.com/francesco-stimola/mesa-nouveau-fixes#reporting-problems
+    about: What to check first, and what to add to a report or a question.
   - name: Kernel problems
     url: https://gitlab.freedesktop.org/drm/nouveau/-/issues
     about: The nouveau kernel driver, including the Kepler video fixes and development kernels such as linux-next.

@@ -97,7 +97,9 @@ eleven.
 
 ### GPU errors and freezes
 
-#### 0001 · GPU errors at every video start
+<a id="0001--gpu-errors-at-every-video-start"></a>
+
+#### 0001, 0013 · GPU errors at every video start
 
 The VA frontend clears new surfaces with plain `pipe_surface` templates.
 nv50 and nvc0 read driver fields past the end of the template, so the
@@ -114,15 +116,24 @@ Kush Chandak found this and tested the fix on a GeForce GT 710
 ([!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340)),
 with two reproducers that are now in `tests/`
 ([check 15](docs/TESTING.md#15-glclearteximage-clears-textures-0001)).
+
 0013 goes with 0001: a cleanup Dave Airlie suggested when he reviewed it,
 which fills the driver surface on the stack instead of allocating one at
-every clear. 0012 fixes the same clears in nv30, the OpenGL driver of
-GeForce FX, 6 and 7 GPUs; it was only built, as no such GPU was at hand.
+every clear. It changes nothing visible.
 
 <p align="center">
   <img src="assets/video-start-traps.gif" width="100%"
        alt="Kernel log after mpv starts a video. Without 0001: SURF_HEIGHT_OVERRUN traps, 35 messages per video start. With 0001: no messages.">
 </p>
+
+#### 0012 · Texture clears on GeForce FX, 6 and 7
+
+nv30, the OpenGL driver of GeForce FX, 6 and 7 GPUs, has the mistake 0001
+fixes in nv50 and nvc0: since Mesa 25.2, `glClearTexImage` passes its clear
+hooks a template on the stack, and they read the size, pitch and offset of
+the render target past its end. 0012 fills the driver surface from the
+template instead. It was only built: no such GPU was at hand, so what the
+bug does on them was not seen.
 
 #### 0006 · Stopping a video can freeze the GPU
 
@@ -266,7 +277,7 @@ distributions, their own patches included.
 
 | Patch | Commit | In Mesa |
 |---|---|---|
-| [0001](#0001--gpu-errors-at-every-video-start) | nv50,nvc0: don't read pipe_surface templates as nv50_surface in clears | approved, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0001](#0001-0013--gpu-errors-at-every-video-start) | nv50,nvc0: don't read pipe_surface templates as nv50_surface in clears | approved, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0002](#0002--firefox-decodes-on-the-cpu) | frontends/va: export interlaced surfaces through a progressive copy | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0003](#0003--hardware-decoding-stops-when-a-clip-loops) | winsys/nouveau: pass the DRM fd when deleting subchannel objects | in review, [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0004](#0004--garbled-gtk-4-menus) | nv50: only push constant buffer updates through a current binding | in review, [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
@@ -277,8 +288,8 @@ distributions, their own patches included.
 | [0009](#0009--monochrome-h264-is-not-decoded) | nouveau: pass chroma_format_idc to the vp3 H.264 decoder | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0010](#0010--interlaced-h264-breaks-up) | nouveau: tell the vp3 H.264 decoder whether a picture is MBAFF | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0011](#0011--brave-decodes-on-the-cpu-on-kepler) | nvc0: accept tiled modifiers for planar YUV formats | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
-| [0012](#0001--gpu-errors-at-every-video-start) | nv30: don't read pipe_surface templates as nv30_surface in clears | approved, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
-| [0013](#0001--gpu-errors-at-every-video-start) | nv50,nvc0: clear through a driver surface on the stack | approved, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0012](#0012--texture-clears-on-geforce-fx-6-and-7) | nv30: don't read pipe_surface templates as nv30_surface in clears | approved, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0013](#0001-0013--gpu-errors-at-every-video-start) | nv50,nvc0: clear through a driver surface on the stack | approved, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 
 ### Which GPUs need which patches
 
@@ -289,6 +300,7 @@ check the chipset `vainfo` prints.
 
 | GPUs | Examples | Video engine | Codecs |
 |---|---|---|---|
+| NV30 and NV40 families (NV30–NV4E, NV63, NV67) | GeForce FX 5200–5950, GeForce 6 and 7 series and their Go models; integrated GeForce 6100, 6150 and 7050–7150 | none that VA-API can use | – |
 | G80 (NV50) | GeForce 8800 GTX, 8800 GTS 320/640 | VP1, not supported by nouveau | – |
 | G84–G96, GT200 (NV84–NVA0) | GeForce 8400 GS (first version), 8500 GT, 8600, 8800 GT, 9400 GT–9800 GTX, GTS 250, GTX 260–295, 8400M–9800M | VP2 | H.264, MPEG-2 |
 | G98, MCP77–MCP7A (NV98, NVAA, NVAC) | GeForce 8400 GS (later versions), 9300 GS, 9200M GS, 9300M GS; integrated GeForce 8200, 8300, 9300, 9400 and ION | VP3 | H.264, MPEG-2, VC-1 |
@@ -297,7 +309,7 @@ check the chipset `vainfo` prints.
 | GF117, GF119, Kepler (NVD7, NVD9, NVE4–NV108) | GeForce GT 520, GT 610, Kepler models of the 600 and 700 series such as GT 710, GT 730, GTX 660, GTX 770 | VP5 | H.264, MPEG-2, VC-1 |
 | Maxwell and later (NV117 on) | GeForce GTX 745, 750, 750 Ti and later | not supported by nouveau | – |
 
-| Patch | GeForce FX, 6, 7 (NV30–NV4x) | G80 | G84–GT200 (VP2) | G98, MCP7x (VP3) | GT21x, MCP89 (VP4) | GF100–GF116 (VP4) | GF117, GF119, Kepler (VP5) |
+| Patch | NV30, NV40 families | G80 | G84–GT200 (VP2) | G98, MCP7x (VP3) | GT21x, MCP89 (VP4) | GF100–GF116 (VP4) | GF117, GF119, Kepler (VP5) |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 | 0001, 0013 | | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 0002 | | | ✓ | ✓ | ✓ | ✓ | ✓ |

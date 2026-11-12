@@ -3,7 +3,10 @@
 What a GeForce 8 to 700 GPU on nouveau needs for hardware video decoding in
 Firefox and Brave and a glitch-free GTK 4 desktop, in a Wayland session. The
 steps were made on Ubuntu 24.04 (Zorin OS 18); section 1 also covers Debian
-and Fedora.
+and Fedora. GPUs that nouveau decodes no video on (GeForce FX to 7, G80,
+Maxwell and later) get only the OpenGL texture clear fixes: section 1 is all
+they need, with an installed Mesa, since the VA driver alone leaves OpenGL
+unchanged.
 
 1. [Mesa with the patches](#1-mesa-with-the-patches)
 2. [Video firmware](#2-video-firmware)

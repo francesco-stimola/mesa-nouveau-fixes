@@ -4,7 +4,9 @@ The checks behind the results in the [README](../README.md). They need a GPU
 with nouveau video decoding, the firmware installed, and a VA driver built
 with [`scripts/build-va-driver.sh`](../scripts/build-va-driver.sh). In the
 commands below, `$NVFIX` is the directory that holds the patched
-`nouveau_drv_video.so`.
+`nouveau_drv_video.so`. Checks 7 and 15 test the OpenGL driver instead,
+with a whole Mesa build, and check 15 runs on any GPU nouveau runs OpenGL
+on.
 
 Run every check twice: once without `LIBVA_DRIVERS_PATH` (stock Mesa) and once
 with `LIBVA_DRIVERS_PATH=$NVFIX`.
@@ -336,7 +338,9 @@ With 0011 there are no such lines, and `brave://media-internals` shows
 ## 15. glClearTexImage clears textures (0001)
 
 0001 also fixes `glClearTexImage` in the OpenGL driver: since Mesa 25.2 it
-reaches the same clear hooks with a template on the stack. Kush Chandak wrote
+reaches the same clear hooks with a template on the stack, on every GPU from
+G80 on. 0012 makes the same fix in nv30, the driver of the NV30 and NV40
+families (GeForce FX to 7), and was only built. Kush Chandak wrote
 two reproducers. [`tests/cleartex.c`](../tests/cleartex.c) clears a depth
 texture and a colour texture, reads them back and counts the texels that are
 wrong; the exit status is 1 if any are. With the Mesa build of check 7:
@@ -380,5 +384,4 @@ with Mesa 25.2.8:
 | GT 240M, with the patches | 0 | 0 | 1980 of 1980 pass, no kernel messages |
 
 The GT 240M row was measured again on 11 November 2026 with 0001 as
-reviewed in Mesa and 0013, with the same results. 0012 makes the same fix in
-nv30, the driver of GeForce FX, 6 and 7 GPUs, and was only built.
+reviewed in Mesa and 0013, with the same results.

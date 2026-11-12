@@ -5,7 +5,8 @@
  * Clears a depth texture and a color texture with glClearTexImage. Since
  * Mesa 25.2, util_clear_texture_as_surface() hands the driver a
  * pipe_surface template on the stack, and the nv50 and nvc0 clear hooks
- * read it as a larger nv50_surface.
+ * read it as a larger nv50_surface. nv30 has the same bug (0012), but this
+ * reproducer was never run on such a GPU.
  *
  * Build: gcc -O0 -o cleartex cleartex.c -ldl
  * Run:   ./cleartex          clear one depth and one color texture, read them

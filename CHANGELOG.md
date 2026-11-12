@@ -16,10 +16,17 @@
   cleanup Dave suggested that fills the driver surface on the stack
   instead of allocating one at every clear; **0012** (nv30: don't read
   pipe_surface templates as nv30_surface in clears) fixes the same texture
-  clears for GeForce FX, 6 and 7, and was only built. On the GT 240M with Mesa 25.2.8, checks 2, 11 and 15 gave
-  the same results as before. 0003 and 0004 are in
+  clears for GeForce FX, 6 and 7, and was only built. On the GT 240M with
+  Mesa 25.2.8, checks 2, 11 and 15 gave the same results as before. 0003
+  and 0004 are in
   [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224),
   also at Dave's request. All of them stay in !45340 too.
+- **GPUs.** The texture clear fixes reach every GPU nouveau runs OpenGL on,
+  not only those it decodes video on: 0012 the NV30 and NV40 families
+  (GeForce FX to 7), 0001 and 0013 everything from G80 on, Maxwell and
+  later included. The README's GPU tables, its introduction, SETUP.md and
+  TESTING.md now say so; such GPUs only need the patched Mesa, not the VA
+  driver.
 - **CI.** The check against Mesa main applies the patches one at a time,
   since 0013 changes lines that 0001 adds.
 - **Tests.** [`tests/cleartex.c`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/cleartex.c)

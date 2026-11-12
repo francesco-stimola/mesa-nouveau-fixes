@@ -8,7 +8,7 @@
 
 ### Hardware video decoding in Firefox and Brave on older NVIDIA GPUs
 
-**Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, H.264 pictures that match software decoding, no GPU errors on video playback, and GTK 4 menus that draw correctly.**
+**Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, H.264 pictures that match software decoding, no GPU errors on video playback, and GTK 4 menus that draw correctly. On every GPU nouveau runs OpenGL on, from the GeForce FX on: texture clears that work.**
 
 [![Checks](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml/badge.svg)](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml)
 [![Latest release](https://img.shields.io/github/v/release/francesco-stimola/mesa-nouveau-fixes?sort=semver&label=release)](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)
@@ -27,8 +27,10 @@
 nouveau can decode H.264, MPEG-2 and VC-1 in hardware on GeForce 8 (G84 and
 later) to GeForce 700 (Kepler) GPUs. `mpv --hwdec=vaapi-copy` works, but
 browsers never use it, every video start fills the kernel log with GPU
-errors, and some H.264 videos come out wrong. These patches fix that, and a
-GTK 4 bug in the same driver.
+errors, and some H.264 videos come out wrong. These patches fix that, a
+GTK 4 bug on GeForce 8 to 300 GPUs, and `glClearTexImage`, which since Mesa
+25.2 clears textures wrongly on every GPU nouveau runs OpenGL on, from the
+GeForce FX on.
 
 ## Fixes
 
@@ -293,14 +295,15 @@ distributions, their own patches included.
 
 ### Which GPUs need which patches
 
-nouveau decodes video with a different engine on each GPU generation. The
-nouveau chipset (in brackets) is what `vainfo` prints after "for", for
-example `NVA5`. Some GeForce 600 and 700 models use Fermi or Maxwell chips:
-check the chipset `vainfo` prints.
+nouveau decodes video with a different engine on each GPU generation, and
+the OpenGL fixes also reach the GPUs it decodes no video on. The nouveau
+chipset (in brackets) is what `vainfo` prints after "for" and what
+`glxinfo -B` prints as the renderer, for example `NVA5`. Some GeForce 600
+and 700 models use Fermi or Maxwell chips: check the chipset.
 
 | GPUs | Examples | Video engine | Codecs |
 |---|---|---|---|
-| NV30 and NV40 families (NV30–NV4E, NV63, NV67) | GeForce FX 5200–5950, GeForce 6 and 7 series and their Go models; integrated GeForce 6100, 6150 and 7050–7150 | none that VA-API can use | – |
+| NV30 and NV40 families (NV30–NV4E, NV63, NV67) | GeForce FX 5200–5950, GeForce 6 and 7 series, Go and integrated models included | none that VA-API can use | – |
 | G80 (NV50) | GeForce 8800 GTX, 8800 GTS 320/640 | VP1, not supported by nouveau | – |
 | G84–G96, GT200 (NV84–NVA0) | GeForce 8400 GS (first version), 8500 GT, 8600, 8800 GT, 9400 GT–9800 GTX, GTS 250, GTX 260–295, 8400M–9800M | VP2 | H.264, MPEG-2 |
 | G98, MCP77–MCP7A (NV98, NVAA, NVAC) | GeForce 8400 GS (later versions), 9300 GS, 9200M GS, 9300M GS; integrated GeForce 8200, 8300, 9300, 9400 and ION | VP3 | H.264, MPEG-2, VC-1 |
@@ -309,30 +312,32 @@ check the chipset `vainfo` prints.
 | GF117, GF119, Kepler (NVD7, NVD9, NVE4–NV108) | GeForce GT 520, GT 610, Kepler models of the 600 and 700 series such as GT 710, GT 730, GTX 660, GTX 770 | VP5 | H.264, MPEG-2, VC-1 |
 | Maxwell and later (NV117 on) | GeForce GTX 745, 750, 750 Ti and later | not supported by nouveau | – |
 
-| Patch | NV30, NV40 families | G80 | G84–GT200 (VP2) | G98, MCP7x (VP3) | GT21x, MCP89 (VP4) | GF100–GF116 (VP4) | GF117, GF119, Kepler (VP5) |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| 0001, 0013 | | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 0002 | | | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 0003 | | | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 0004 | | ✓ | ✓ | ✓ | ✓ | | |
-| 0005 | | | | ✓ | ✓ | ✓ | ✓ |
-| 0006 | | | | ✓ | ✓ | ✓ | ✓ |
-| 0007 | | | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 0008 | | | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 0009 | | | | ✓ | ✓ | ✓ | ✓ |
-| 0010 | | | | ✓ | ✓ | ✓ | ✓ |
-| 0011 | | | | | | ✓ | ✓ |
-| 0012 | ✓ | | | | | | |
+| Patch | NV30, NV40 families | G80 | G84–GT200 (VP2) | G98, MCP7x (VP3) | GT21x, MCP89 (VP4) | GF100–GF116 (VP4) | GF117, GF119, Kepler (VP5) | Maxwell and later |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| 0001, 0013 | | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 0012 | ✓ | | | | | | | |
+| 0002 | | | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| 0003 | | | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| 0004 | | ✓ | ✓ | ✓ | ✓ | | | |
+| 0005 | | | | ✓ | ✓ | ✓ | ✓ | |
+| 0006 | | | | ✓ | ✓ | ✓ | ✓ | |
+| 0007 | | | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| 0008 | | | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| 0009 | | | | ✓ | ✓ | ✓ | ✓ | |
+| 0010 | | | | ✓ | ✓ | ✓ | ✓ | |
+| 0011 | | | | | | ✓ | ✓ | |
 
 0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
 with or without video decoding; so do 0001 and 0013, for texture clears on
-every GPU in the table from G80 on, and 0012, for the same clears on
-GeForce FX, 6 and 7 GPUs. 0003 changes code every nouveau GPU runs; the
-failure it fixes shows up when a program re-creates a video decoder.
-VP2 GPUs set the two parameters 0009 and 0010 correct in the same way, in
-their own decoder code (`nv84_video_bsp.c`, `nv84_video_vp.c`); these
-patches leave it alone, since there was no VP2 GPU to test them on. 0011
-changes code that every GF100 and later GPU runs; it was tested on Kepler.
+every GPU from G80 on, Maxwell and later included, and 0012, for the same
+clears on the NV30 and NV40 families. 0003 changes code every nouveau GPU
+runs; the failure it fixes shows up when a program re-creates a video
+decoder. VP2 GPUs set the two parameters 0009 and 0010 correct in the same
+way, in their own decoder code (`nv84_video_bsp.c`, `nv84_video_vp.c`);
+these patches leave it alone, since there was no VP2 GPU to test them on.
+0011 changes code that every GF100 and later GPU runs, but the frames it
+lets through come from nouveau's video decoder, which Maxwell and later
+lack; it was tested on Kepler.
 
 On Kepler, Kush Chandak tested all ten patches on a GeForce GT 710
 (GK208B): H.264 and MPEG-2 decode at 1080p, H.264 identical to software
@@ -359,6 +364,7 @@ and these kernel fixes, in Firefox, mpv and, with 0011, Brave and Discord.
 - **Build it yourself**, on any distribution: a patched VA driver, to try for
   one program without touching the system Mesa; for Ubuntu 24.04 each
   release has one prebuilt ([how](docs/SETUP.md#try-it-without-installing)).
+  It carries the video fixes only, not the OpenGL ones.
 - **Debian** 13 with backports, testing and unstable: a script rebuilds
   Debian's own Mesa packages with the patches ([how](docs/SETUP.md#debian)).
 - **Fedora** 43 to 45: a script rebuilds Fedora's own Mesa packages with the
@@ -366,7 +372,8 @@ and these kernel fixes, in Firefox, mpv and, with 0011, Brave and Discord.
   ([how](docs/SETUP.md#fedora)).
 
 Then install the firmware, set up the browsers and fix the GPU clocks, as
-[Setup](#setup) describes.
+[Setup](#setup) describes. GPUs that nouveau decodes no video on, such as
+GeForce FX to 7, G80 and Maxwell and later, only need the patched Mesa.
 
 ## Setup
 

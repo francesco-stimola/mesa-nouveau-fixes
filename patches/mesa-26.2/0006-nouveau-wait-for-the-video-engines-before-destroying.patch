@@ -1,7 +1,7 @@
-From 0462b4e5a08866c873dc1aae78da64732c602a97 Mon Sep 17 00:00:00 2001
+From e0e1da15829b661d2f70bf51601f114d51a6e782 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 20:55:35 +0200
-Subject: [PATCH 06/11] nouveau: wait for the video engines before destroying a
+Subject: [PATCH 06/13] nouveau: wait for the video engines before destroying a
  vp3 decoder
 
 nouveau_vp3_decoder_destroy deletes the engine objects and the channels

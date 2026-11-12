@@ -1,7 +1,7 @@
-From 65a1ad71bbdaea285586d4f0b87241d1bfa17587 Mon Sep 17 00:00:00 2001
+From 127fc9266494d6a334a86c844f34b96cff198da2 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 12:21:58 +0200
-Subject: [PATCH 03/10] winsys/nouveau: pass the DRM fd when deleting
+Subject: [PATCH 03/13] winsys/nouveau: pass the DRM fd when deleting
  subchannel objects
 
 nouveau_object_subchan_del() hands obj->parent->handle, the channel id,

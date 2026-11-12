@@ -1,0 +1,145 @@
+From 6366012ef9c473df9bfd578eefc416c024388cca Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Wed, 11 Nov 2026 08:52:57 +0100
+Subject: [PATCH 12/13] nv30: don't read pipe_surface templates as nv30_surface
+ in clears
+
+Since 718e277ab56e, util_clear_texture_as_surface() passes the clear
+hooks a pipe_surface template from the stack for glClearTexImage.
+nv30_clear_render_target and nv30_clear_depth_stencil cast it to
+nv30_surface and read width, height, pitch and offset past its end.
+
+Fill an nv30_surface on the stack from the template with a new
+nv30_miptree_surface_init(), which nv30_miptree_surface_new now uses
+too. Build-tested only.
+
+Fixes: 718e277ab56e ("util/surface: delete more pipe_context::create_surface usage")
+---
+ src/gallium/drivers/nouveau/nv30/nv30_clear.c | 15 ++++++--
+ .../drivers/nouveau/nv30/nv30_miptree.c       | 35 ++++++++++++-------
+ .../drivers/nouveau/nv30/nv30_resource.h      |  4 +++
+ 3 files changed, 39 insertions(+), 15 deletions(-)
+
+diff --git a/src/gallium/drivers/nouveau/nv30/nv30_clear.c b/src/gallium/drivers/nouveau/nv30/nv30_clear.c
+index 0ddcd5a..c023ac8 100644
+--- a/src/gallium/drivers/nouveau/nv30/nv30_clear.c
++++ b/src/gallium/drivers/nouveau/nv30/nv30_clear.c
+@@ -121,6 +121,11 @@ nv30_clear(struct pipe_context *pipe, unsigned buffers,
+    nv30->state.scissor_off = 0;
+ }
+ 
++/* Callers may pass a plain pipe_surface template, such as the one
++ * util_clear_texture_as_surface builds on the stack, rather than a surface
++ * made by nv30_miptree_surface_new. Reading nv30_surface fields from a
++ * template reads past its end, so fill the driver surface here.
++ */
+ static void
+ nv30_clear_render_target(struct pipe_context *pipe, struct pipe_surface *ps,
+                          const union pipe_color_union *color,
+@@ -128,12 +133,15 @@ nv30_clear_render_target(struct pipe_context *pipe, struct pipe_surface *ps,
+                          bool render_condition_enabled)
+ {
+    struct nv30_context *nv30 = nv30_context(pipe);
+-   struct nv30_surface *sf = nv30_surface(ps);
++   struct nv30_surface surf = {0};
++   struct nv30_surface *sf = &surf;
+    struct nv30_miptree *mt = nv30_miptree(ps->texture);
+    struct nouveau_pushbuf *push = nv30->base.pushbuf;
+    struct nouveau_object *eng3d = nv30->screen->eng3d;
+    uint32_t rt_format;
+ 
++   nv30_miptree_surface_init(sf, ps->texture, ps);
++
+    rt_format = nv30_format(pipe->screen, ps->format)->hw;
+    if (util_format_get_blocksize(ps->format) == 4)
+       rt_format |= NV30_3D_RT_FORMAT_ZETA_Z24S8;
+@@ -186,12 +194,15 @@ nv30_clear_depth_stencil(struct pipe_context *pipe, struct pipe_surface *ps,
+                          bool render_condition_enabled)
+ {
+    struct nv30_context *nv30 = nv30_context(pipe);
+-   struct nv30_surface *sf = nv30_surface(ps);
++   struct nv30_surface surf = {0};
++   struct nv30_surface *sf = &surf;
+    struct nv30_miptree *mt = nv30_miptree(ps->texture);
+    struct nouveau_pushbuf *push = nv30->base.pushbuf;
+    struct nouveau_object *eng3d = nv30->screen->eng3d;
+    uint32_t rt_format, mode = 0;
+ 
++   nv30_miptree_surface_init(sf, ps->texture, ps);
++
+    rt_format = nv30_format(pipe->screen, ps->format)->hw;
+    if (util_format_get_blocksize(ps->format) == 4)
+       rt_format |= NV30_3D_RT_FORMAT_COLOR_A8R8G8B8;
+diff --git a/src/gallium/drivers/nouveau/nv30/nv30_miptree.c b/src/gallium/drivers/nouveau/nv30/nv30_miptree.c
+index f813941..be0b4df 100644
+--- a/src/gallium/drivers/nouveau/nv30/nv30_miptree.c
++++ b/src/gallium/drivers/nouveau/nv30/nv30_miptree.c
+@@ -541,22 +541,18 @@ nv30_miptree_from_handle(struct pipe_screen *pscreen,
+    return &mt->base.base;
+ }
+ 
+-static struct pipe_surface *
+-nv30_miptree_surface_new(struct pipe_context *pipe,
+-                         struct pipe_resource *pt,
+-                         const struct pipe_surface *tmpl)
++/* Fill ns for the level and layers of tmpl. This neither allocates nor takes
++ * a reference on pt, so it can fill a surface on the stack.
++ */
++void
++nv30_miptree_surface_init(struct nv30_surface *ns, struct pipe_resource *pt,
++                          const struct pipe_surface *tmpl)
+ {
+    struct nv30_miptree *mt = nv30_miptree(pt); /* guaranteed */
+-   struct nv30_surface *ns;
+-   struct pipe_surface *ps;
+    struct nv30_miptree_level *lvl = &mt->level[tmpl->level];
++   struct pipe_surface *ps = &ns->base;
+ 
+-   ns = CALLOC_STRUCT(nv30_surface);
+-   if (!ns)
+-      return NULL;
+-   ps = &ns->base;
+-
+-   pipe_resource_reference(&ps->texture, pt);
++   ps->texture = pt;
+    ps->format = tmpl->format;
+    ps->level = tmpl->level;
+    ps->first_layer = tmpl->first_layer;
+@@ -570,8 +566,21 @@ nv30_miptree_surface_new(struct pipe_context *pipe,
+       ns->pitch = 4096; /* random, just something the hw won't reject.. */
+    else
+       ns->pitch = lvl->pitch;
++}
++
++static struct pipe_surface *
++nv30_miptree_surface_new(struct pipe_context *pipe,
++                         struct pipe_resource *pt,
++                         const struct pipe_surface *tmpl)
++{
++   struct nv30_surface *ns = CALLOC_STRUCT(nv30_surface);
++
++   if (!ns)
++      return NULL;
+ 
+-   return ps;
++   pipe_resource_reference(&ns->base.texture, pt);
++   nv30_miptree_surface_init(ns, pt, tmpl);
++   return &ns->base;
+ }
+ 
+ static void
+diff --git a/src/gallium/drivers/nouveau/nv30/nv30_resource.h b/src/gallium/drivers/nouveau/nv30/nv30_resource.h
+index 67e51d2..a75d1b7 100644
+--- a/src/gallium/drivers/nouveau/nv30/nv30_resource.h
++++ b/src/gallium/drivers/nouveau/nv30/nv30_resource.h
+@@ -21,6 +21,10 @@ nv30_surface(struct pipe_surface *ps)
+    return (struct nv30_surface *)ps;
+ }
+ 
++void
++nv30_miptree_surface_init(struct nv30_surface *, struct pipe_resource *,
++                          const struct pipe_surface *);
++
+ struct nv30_miptree_level {
+    uint32_t offset;
+    uint32_t pitch;

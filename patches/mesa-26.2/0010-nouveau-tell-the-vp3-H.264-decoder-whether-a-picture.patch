@@ -1,7 +1,7 @@
-From 977689cb56c9ee16ece77745f5de56a0ca613d4f Mon Sep 17 00:00:00 2001
+From 2247fc8d73149f00c2e4cd7df686b0a1f9543e72 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sun, 18 Oct 2026 17:30:06 +0200
-Subject: [PATCH 10/11] nouveau: tell the vp3 H.264 decoder whether a picture
+Subject: [PATCH 10/13] nouveau: tell the vp3 H.264 decoder whether a picture
  is MBAFF
 
 BSP and VP take mb_adaptive_frame_field_flag from the SPS, but MBAFF

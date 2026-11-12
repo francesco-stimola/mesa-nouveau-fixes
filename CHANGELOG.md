@@ -7,9 +7,21 @@
   instead of `main`, which may hold patches still in review in Mesa. The
   PPA workflow also stops when Launchpad does not answer, instead of
   building a `+nvfix1`, and times out stalled uploads.
-- **Mesa.** 0008 and 0001 are also in a merge request of their own,
+- **0001, 0012 and 0013, as approved in Mesa.** Dave Airlie asked for 0008
+  and 0001 in a merge request of their own,
   [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135),
-  as Dave Airlie asked in !45340; they stay in !45340 too.
+  and approved it on 11 November; it waits to be merged. The patches here
+  now match it: 0001 has the reviewed code and message, and **0013**
+  (nv50,nvc0: clear through a driver surface on the stack) goes with it, a
+  cleanup Dave suggested that fills the driver surface on the stack
+  instead of allocating one at every clear; **0012** (nv30: don't read
+  pipe_surface templates as nv30_surface in clears) fixes the same texture
+  clears for GeForce FX, 6 and 7, and was only built. On the GT 240M with Mesa 25.2.8, checks 2, 11 and 15 gave
+  the same results as before. 0003 and 0004 are in
+  [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224),
+  also at Dave's request. All of them stay in !45340 too.
+- **CI.** The check against Mesa main applies the patches one at a time,
+  since 0013 changes lines that 0001 adds.
 - **Tests.** [`tests/cleartex.c`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/cleartex.c)
   and [`tests/clear-test.html`](https://github.com/francesco-stimola/mesa-nouveau-fixes/blob/main/tests/clear-test.html),
   Kush Chandak's reproducers for the `glClearTexImage` bug that 0001 fixes,
@@ -31,9 +43,6 @@
   three frames under KDE Plasma on nouveau, a Chromium bug with explicit
   sync, and links Kush Chandak's workaround and the
   [Chromium report](https://issues.chromium.org/issues/582204270).
-- **0001.** The message no longer carries Kush Chandak's Tested-by, as in
-  Mesa !45340 ([issue #1](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/1#issuecomment-6597693583));
-  the code is unchanged.
 
 ## 1.5.0 - 2026-11-02
 

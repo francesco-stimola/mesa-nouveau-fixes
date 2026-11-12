@@ -1,0 +1,235 @@
+From 5e09bbe7a1a9d998c3e05ba5c815473ea54ea527 Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Wed, 11 Nov 2026 08:55:21 +0100
+Subject: [PATCH 13/13] nv50,nvc0: clear through a driver surface on the stack
+
+The clear_render_target and clear_depth_stencil hooks allocate a
+surface, with a texture reference, for every clear, only to read a few
+fields from it.
+
+Split nv50_surface_from_miptree and nv50_miptree_surface_new into
+_init helpers that fill a caller's nv50_surface without allocating or
+taking a reference, and clear through a surface on the stack.
+
+Suggested-by: Dave Airlie <airlied@redhat.com>
+---
+ .../drivers/nouveau/nv50/nv50_miptree.c       | 64 +++++++++++++------
+ .../drivers/nouveau/nv50/nv50_resource.h      | 10 +++
+ .../drivers/nouveau/nv50/nv50_surface.c       | 23 +++----
+ .../drivers/nouveau/nvc0/nvc0_surface.c       | 23 +++----
+ 4 files changed, 72 insertions(+), 48 deletions(-)
+
+diff --git a/src/gallium/drivers/nouveau/nv50/nv50_miptree.c b/src/gallium/drivers/nouveau/nv50/nv50_miptree.c
+index faf30cc..0fced30 100644
+--- a/src/gallium/drivers/nouveau/nv50/nv50_miptree.c
++++ b/src/gallium/drivers/nouveau/nv50/nv50_miptree.c
+@@ -462,20 +462,19 @@ nv50_mt_zslice_offset(const struct nv50_miptree *mt, unsigned l, unsigned z)
+ /* Surface functions.
+  */
+ 
+-struct nv50_surface *
+-nv50_surface_from_miptree(struct nv50_miptree *mt,
+-                          const struct pipe_surface *templ)
++/* Fill ns for the level and layers of templ. This neither allocates nor takes
++ * a reference on mt, so it can fill a surface on the stack.
++ */
++void
++nv50_surface_init_from_miptree(struct nv50_surface *ns,
++                               struct nv50_miptree *mt,
++                               const struct pipe_surface *templ)
+ {
+-   struct pipe_surface *ps;
+-   struct nv50_surface *ns = CALLOC_STRUCT(nv50_surface);
+-   if (!ns)
+-      return NULL;
+-   ps = &ns->base;
+-
+-   pipe_reference_init(&ps->reference, 1);
+-   pipe_resource_reference(&ps->texture, &mt->base.base);
++   struct pipe_surface *ps = &ns->base;
+ 
++   ps->texture = &mt->base.base;
+    ps->format = templ->format;
++   ps->nr_samples = templ->nr_samples;
+    ps->level = templ->level;
+    ps->first_layer = templ->first_layer;
+    ps->last_layer = templ->last_layer;
+@@ -500,19 +499,34 @@ nv50_surface_from_miptree(struct nv50_miptree *mt,
+ 
+    ns->width <<= mt->ms_x;
+    ns->height <<= mt->ms_y;
++}
++
++struct nv50_surface *
++nv50_surface_from_miptree(struct nv50_miptree *mt,
++                          const struct pipe_surface *templ)
++{
++   struct nv50_surface *ns = CALLOC_STRUCT(nv50_surface);
++   if (!ns)
++      return NULL;
++
++   pipe_reference_init(&ns->base.reference, 1);
++   pipe_resource_reference(&ns->base.texture, &mt->base.base);
++   nv50_surface_init_from_miptree(ns, mt, templ);
+ 
+    return ns;
+ }
+ 
+-struct pipe_surface *
+-nv50_miptree_surface_new(struct pipe_context *pipe,
+-                         struct pipe_resource *pt,
+-                         const struct pipe_surface *templ)
++/* Like nv50_surface_init_from_miptree, with the offset of the first layer
++ * added as nv50 render targets need it.
++ */
++void
++nv50_miptree_surface_init(struct nv50_surface *ns,
++                          struct pipe_resource *pt,
++                          const struct pipe_surface *templ)
+ {
+    struct nv50_miptree *mt = nv50_miptree(pt);
+-   struct nv50_surface *ns = nv50_surface_from_miptree(mt, templ);
+-   if (!ns)
+-      return NULL;
++
++   nv50_surface_init_from_miptree(ns, mt, templ);
+ 
+    if (ns->base.first_layer) {
+       const unsigned l = ns->base.level;
+@@ -529,6 +543,20 @@ nv50_miptree_surface_new(struct pipe_context *pipe,
+          ns->offset += mt->layer_stride * z;
+       }
+    }
++}
++
++struct pipe_surface *
++nv50_miptree_surface_new(struct pipe_context *pipe,
++                         struct pipe_resource *pt,
++                         const struct pipe_surface *templ)
++{
++   struct nv50_surface *ns = CALLOC_STRUCT(nv50_surface);
++   if (!ns)
++      return NULL;
++
++   pipe_reference_init(&ns->base.reference, 1);
++   pipe_resource_reference(&ns->base.texture, pt);
++   nv50_miptree_surface_init(ns, pt, templ);
+ 
+    return &ns->base;
+ }
+diff --git a/src/gallium/drivers/nouveau/nv50/nv50_resource.h b/src/gallium/drivers/nouveau/nv50/nv50_resource.h
+index 11e3d42..f86e6e6 100644
+--- a/src/gallium/drivers/nouveau/nv50/nv50_resource.h
++++ b/src/gallium/drivers/nouveau/nv50/nv50_resource.h
+@@ -136,6 +136,11 @@ nv50_miptree_surface_new(struct pipe_context *,
+                          struct pipe_resource *,
+                          const struct pipe_surface *templ);
+ 
++void
++nv50_miptree_surface_init(struct nv50_surface *,
++                          struct pipe_resource *,
++                          const struct pipe_surface *templ);
++
+ void *
+ nv50_miptree_transfer_map(struct pipe_context *pctx,
+                           struct pipe_resource *res,
+@@ -149,6 +154,11 @@ nv50_miptree_transfer_unmap(struct pipe_context *pcontext,
+ 
+ #endif /* __NVC0_RESOURCE_H__ */
+ 
++void
++nv50_surface_init_from_miptree(struct nv50_surface *ns,
++                               struct nv50_miptree *mt,
++                               const struct pipe_surface *templ);
++
+ struct nv50_surface *
+ nv50_surface_from_miptree(struct nv50_miptree *mt,
+                           const struct pipe_surface *templ);
+diff --git a/src/gallium/drivers/nouveau/nv50/nv50_surface.c b/src/gallium/drivers/nouveau/nv50/nv50_surface.c
+index caaf057..6a9353d 100644
+--- a/src/gallium/drivers/nouveau/nv50/nv50_surface.c
++++ b/src/gallium/drivers/nouveau/nv50/nv50_surface.c
+@@ -378,15 +378,11 @@ nv50_clear_render_target(struct pipe_context *pipe,
+                          unsigned width, unsigned height,
+                          bool render_condition_enabled)
+ {
+-   struct pipe_surface *ps = nv50_miptree_surface_new(pipe, dst->texture, dst);
++   struct nv50_surface sf = {0};
+ 
+-   if (!ps)
+-      return;
+-
+-   nv50_clear_render_target_internal(pipe, nv50_surface(ps), color,
+-                                     dstx, dsty, width, height,
+-                                     render_condition_enabled);
+-   nv50_surface_destroy(pipe, ps);
++   nv50_miptree_surface_init(&sf, dst->texture, dst);
++   nv50_clear_render_target_internal(pipe, &sf, color, dstx, dsty,
++                                     width, height, render_condition_enabled);
+ }
+ 
+ static void
+@@ -487,15 +483,12 @@ nv50_clear_depth_stencil(struct pipe_context *pipe,
+                          unsigned width, unsigned height,
+                          bool render_condition_enabled)
+ {
+-   struct pipe_surface *ps = nv50_miptree_surface_new(pipe, dst->texture, dst);
++   struct nv50_surface sf = {0};
+ 
+-   if (!ps)
+-      return;
+-
+-   nv50_clear_depth_stencil_internal(pipe, nv50_surface(ps), clear_flags,
+-                                     depth, stencil, dstx, dsty, width, height,
++   nv50_miptree_surface_init(&sf, dst->texture, dst);
++   nv50_clear_depth_stencil_internal(pipe, &sf, clear_flags, depth, stencil,
++                                     dstx, dsty, width, height,
+                                      render_condition_enabled);
+-   nv50_surface_destroy(pipe, ps);
+ }
+ 
+ void
+diff --git a/src/gallium/drivers/nouveau/nvc0/nvc0_surface.c b/src/gallium/drivers/nouveau/nvc0/nvc0_surface.c
+index 29b338e..888c1de 100644
+--- a/src/gallium/drivers/nouveau/nvc0/nvc0_surface.c
++++ b/src/gallium/drivers/nouveau/nvc0/nvc0_surface.c
+@@ -382,15 +382,11 @@ nvc0_clear_render_target(struct pipe_context *pipe,
+                          unsigned width, unsigned height,
+                          bool render_condition_enabled)
+ {
+-   struct pipe_surface *ps = nvc0_miptree_surface_new(pipe, dst->texture, dst);
++   struct nv50_surface sf = {0};
+ 
+-   if (!ps)
+-      return;
+-
+-   nvc0_clear_render_target_internal(pipe, nv50_surface(ps), color,
+-                                     dstx, dsty, width, height,
+-                                     render_condition_enabled);
+-   nv50_surface_destroy(pipe, ps);
++   nv50_surface_init_from_miptree(&sf, nv50_miptree(dst->texture), dst);
++   nvc0_clear_render_target_internal(pipe, &sf, color, dstx, dsty,
++                                     width, height, render_condition_enabled);
+ }
+ 
+ static void
+@@ -725,15 +721,12 @@ nvc0_clear_depth_stencil(struct pipe_context *pipe,
+                          unsigned width, unsigned height,
+                          bool render_condition_enabled)
+ {
+-   struct pipe_surface *ps = nvc0_miptree_surface_new(pipe, dst->texture, dst);
++   struct nv50_surface sf = {0};
+ 
+-   if (!ps)
+-      return;
+-
+-   nvc0_clear_depth_stencil_internal(pipe, nv50_surface(ps), clear_flags,
+-                                     depth, stencil, dstx, dsty, width, height,
++   nv50_surface_init_from_miptree(&sf, nv50_miptree(dst->texture), dst);
++   nvc0_clear_depth_stencil_internal(pipe, &sf, clear_flags, depth, stencil,
++                                     dstx, dsty, width, height,
+                                      render_condition_enabled);
+-   nv50_surface_destroy(pipe, ps);
+ }
+ 
+ void

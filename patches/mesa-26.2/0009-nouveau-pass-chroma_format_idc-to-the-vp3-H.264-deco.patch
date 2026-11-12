@@ -1,7 +1,7 @@
-From f289c01b91f4c6c9c5defcb4015e0b8a7a6fdd97 Mon Sep 17 00:00:00 2001
+From 4ada765164aa698939daba0cf531214007337703 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sun, 18 Oct 2026 17:07:37 +0200
-Subject: [PATCH 09/11] nouveau: pass chroma_format_idc to the vp3 H.264
+Subject: [PATCH 09/13] nouveau: pass chroma_format_idc to the vp3 H.264
  decoder
 
 The H.264 picture parameters for BSP and VP both have a

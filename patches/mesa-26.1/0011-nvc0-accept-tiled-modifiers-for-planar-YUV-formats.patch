@@ -1,7 +1,7 @@
-From 11257b850c10ecc38a7a42c7699b096199871011 Mon Sep 17 00:00:00 2001
+From 44fdff760a13adfc8af7f4ac679e95eca9cfe98d Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Mon, 2 Nov 2026 10:12:21 +0100
-Subject: [PATCH 11/11] nvc0: accept tiled modifiers for planar YUV formats
+Subject: [PATCH 11/13] nvc0: accept tiled modifiers for planar YUV formats
 
 nvc0 derives the storage type of a modifier from the block size of the
 format, which planar YUV formats don't have, so it accepts only LINEAR

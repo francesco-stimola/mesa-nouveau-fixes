@@ -1,7 +1,7 @@
-From d67261bc4c9dcc49b6294087747e5b278ae1e17f Mon Sep 17 00:00:00 2001
+From a8dd2d6488509f5531be6bf23fac20deedbbebf7 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sun, 18 Oct 2026 16:57:07 +0200
-Subject: [PATCH 08/10] nv50: size surface views by blocks when the block size
+Subject: [PATCH 08/13] nv50: size surface views by blocks when the block size
  differs
 
 The VA frontend clears YUYV and UYVY video buffers, whose R8G8_R8B8 and

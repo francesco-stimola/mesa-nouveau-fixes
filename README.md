@@ -114,6 +114,10 @@ Kush Chandak found this and tested the fix on a GeForce GT 710
 ([!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340)),
 with two reproducers that are now in `tests/`
 ([check 15](docs/TESTING.md#15-glclearteximage-clears-textures-0001)).
+0013 goes with 0001: a cleanup Dave Airlie suggested when he reviewed it,
+which fills the driver surface on the stack instead of allocating one at
+every clear. 0012 fixes the same clears in nv30, the OpenGL driver of
+GeForce FX, 6 and 7 GPUs; it was only built, as no such GPU was at hand.
 
 <p align="center">
   <img src="assets/video-start-traps.gif" width="100%"
@@ -262,17 +266,19 @@ distributions, their own patches included.
 
 | Patch | Commit | In Mesa |
 |---|---|---|
-| [0001](#0001--gpu-errors-at-every-video-start) | nv50,nvc0: don't read pipe_surface templates as nv50_surface in clears | in review, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) and [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0001](#0001--gpu-errors-at-every-video-start) | nv50,nvc0: don't read pipe_surface templates as nv50_surface in clears | approved, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0002](#0002--firefox-decodes-on-the-cpu) | frontends/va: export interlaced surfaces through a progressive copy | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
-| [0003](#0003--hardware-decoding-stops-when-a-clip-loops) | winsys/nouveau: pass the DRM fd when deleting subchannel objects | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
-| [0004](#0004--garbled-gtk-4-menus) | nv50: only push constant buffer updates through a current binding | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0003](#0003--hardware-decoding-stops-when-a-clip-loops) | winsys/nouveau: pass the DRM fd when deleting subchannel objects | in review, [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0004](#0004--garbled-gtk-4-menus) | nv50: only push constant buffer updates through a current binding | in review, [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0005](#0005--blocks-in-moving-areas-of-h264-videos) | nouveau: keep H.264 references in the same VP slot | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0006](#0006--stopping-a-video-can-freeze-the-gpu) | nouveau: wait for the video engines before destroying a vp3 decoder | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0007](#0007--converted-pictures-turn-green-and-magenta) | vl/compositor: render the V plane with its own gfx shaders | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
-| [0008](#0008--gpu-errors-with-yuyv-and-uyvy-surfaces) | nv50: size surface views by blocks when the block size differs | in review, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) and [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0008](#0008--gpu-errors-with-yuyv-and-uyvy-surfaces) | nv50: size surface views by blocks when the block size differs | approved, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0009](#0009--monochrome-h264-is-not-decoded) | nouveau: pass chroma_format_idc to the vp3 H.264 decoder | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0010](#0010--interlaced-h264-breaks-up) | nouveau: tell the vp3 H.264 decoder whether a picture is MBAFF | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0011](#0011--brave-decodes-on-the-cpu-on-kepler) | nvc0: accept tiled modifiers for planar YUV formats | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0012](#0001--gpu-errors-at-every-video-start) | nv30: don't read pipe_surface templates as nv30_surface in clears | approved, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0013](#0001--gpu-errors-at-every-video-start) | nv50,nvc0: clear through a driver surface on the stack | approved, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 
 ### Which GPUs need which patches
 
@@ -291,24 +297,26 @@ check the chipset `vainfo` prints.
 | GF117, GF119, Kepler (NVD7, NVD9, NVE4–NV108) | GeForce GT 520, GT 610, Kepler models of the 600 and 700 series such as GT 710, GT 730, GTX 660, GTX 770 | VP5 | H.264, MPEG-2, VC-1 |
 | Maxwell and later (NV117 on) | GeForce GTX 745, 750, 750 Ti and later | not supported by nouveau | – |
 
-| Patch | G80 | G84–GT200 (VP2) | G98, MCP7x (VP3) | GT21x, MCP89 (VP4) | GF100–GF116 (VP4) | GF117, GF119, Kepler (VP5) |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|
-| 0001 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 0002 | | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 0003 | | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 0004 | ✓ | ✓ | ✓ | ✓ | | |
-| 0005 | | | ✓ | ✓ | ✓ | ✓ |
-| 0006 | | | ✓ | ✓ | ✓ | ✓ |
-| 0007 | | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 0008 | | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 0009 | | | ✓ | ✓ | ✓ | ✓ |
-| 0010 | | | ✓ | ✓ | ✓ | ✓ |
-| 0011 | | | | | ✓ | ✓ |
+| Patch | GeForce FX, 6, 7 (NV30–NV4x) | G80 | G84–GT200 (VP2) | G98, MCP7x (VP3) | GT21x, MCP89 (VP4) | GF100–GF116 (VP4) | GF117, GF119, Kepler (VP5) |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| 0001, 0013 | | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 0002 | | | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 0003 | | | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 0004 | | ✓ | ✓ | ✓ | ✓ | | |
+| 0005 | | | | ✓ | ✓ | ✓ | ✓ |
+| 0006 | | | | ✓ | ✓ | ✓ | ✓ |
+| 0007 | | | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 0008 | | | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 0009 | | | | ✓ | ✓ | ✓ | ✓ |
+| 0010 | | | | ✓ | ✓ | ✓ | ✓ |
+| 0011 | | | | | | ✓ | ✓ |
+| 0012 | ✓ | | | | | | |
 
 0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
-with or without video decoding; so does 0001, for texture clears on every
-GPU in the table. 0003 changes code every nouveau GPU runs;
-the failure it fixes shows up when a program re-creates a video decoder.
+with or without video decoding; so do 0001 and 0013, for texture clears on
+every GPU in the table from G80 on, and 0012, for the same clears on
+GeForce FX, 6 and 7 GPUs. 0003 changes code every nouveau GPU runs; the
+failure it fixes shows up when a program re-creates a video decoder.
 VP2 GPUs set the two parameters 0009 and 0010 correct in the same way, in
 their own decoder code (`nv84_video_bsp.c`, `nv84_video_vp.c`); these
 patches leave it alone, since there was no VP2 GPU to test them on. 0011

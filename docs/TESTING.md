@@ -378,3 +378,7 @@ with Mesa 25.2.8:
 | GT 710, with the patches | 0 | 0 | 1980 of 1980 pass, no kernel messages |
 | GT 240M, stock Mesa | 4083 of 4096 | 4096 of 4096 | not run; `cleartex` makes the kernel log `DATA_ERROR` (`INVALID_VALUE` on method `0fe4`) and a `DMA_PUSHER` error |
 | GT 240M, with the patches | 0 | 0 | 1980 of 1980 pass, no kernel messages |
+
+The GT 240M row was measured again on 11 November 2026 with 0001 as
+reviewed in Mesa and 0013, with the same results. 0012 makes the same fix in
+nv30, the driver of GeForce FX, 6 and 7 GPUs, and was only built.

@@ -315,7 +315,6 @@ and 700 models use Fermi or Maxwell chips: check the chipset.
 | Patch | NV30, NV40 families | G80 | G84–GT200 (VP2) | G98, MCP7x (VP3) | GT21x, MCP89 (VP4) | GF100–GF116 (VP4) | GF117, GF119, Kepler (VP5) | Maxwell and later |
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 | 0001, 0013 | | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 0012 | ✓ | | | | | | | |
 | 0002 | | | ✓ | ✓ | ✓ | ✓ | ✓ | |
 | 0003 | | | ✓ | ✓ | ✓ | ✓ | ✓ | |
 | 0004 | | ✓ | ✓ | ✓ | ✓ | | | |
@@ -326,6 +325,7 @@ and 700 models use Fermi or Maxwell chips: check the chipset.
 | 0009 | | | | ✓ | ✓ | ✓ | ✓ | |
 | 0010 | | | | ✓ | ✓ | ✓ | ✓ | |
 | 0011 | | | | | | ✓ | ✓ | |
+| 0012 | ✓ | | | | | | | |
 
 0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
 with or without video decoding; so do 0001 and 0013, for texture clears on

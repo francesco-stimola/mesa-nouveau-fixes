@@ -1,4 +1,4 @@
-From 38737bf3c5bd5041be655f61578fdd65a7c42802 Mon Sep 17 00:00:00 2001
+From 8a05f1fadf503ba4e0fc9d94d74c001f48e06821 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 11:35:02 +0200
 Subject: [PATCH 02/13] frontends/va: export interlaced surfaces through a
@@ -68,7 +68,7 @@ index f250bc7..0023bcd 100644
     } else if (context->decoder->entrypoint == PIPE_VIDEO_ENTRYPOINT_ENCODE) {
        switch (u_reduce_video_profile(context->templat.profile)) {
 diff --git a/src/gallium/frontends/va/surface.c b/src/gallium/frontends/va/surface.c
-index 170718f..4ad5ca1 100644
+index 34a3fc8..b6fe85b 100644
 --- a/src/gallium/frontends/va/surface.c
 +++ b/src/gallium/frontends/va/surface.c
 @@ -69,6 +69,8 @@ vlVaDestroySurface(vlVaDriver *drv, vlVaSurface *surf)
@@ -131,10 +131,10 @@ index 170718f..4ad5ca1 100644
 +   return vlVaPostProc(drv, NULL, surf->buffer, surf->export_buffer, &param);
 +}
 +
- static void
- vlVaSwitchToProtectedContext(vlVaDriver *drv)
+ static int
+ rt_format_to_fourcc(uint32_t format)
  {
-@@ -1165,6 +1214,7 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
+@@ -1136,6 +1185,7 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
  {
     vlVaDriver *drv;
     vlVaSurface *surf;
@@ -142,7 +142,7 @@ index 170718f..4ad5ca1 100644
     struct pipe_surface *surfaces;
     struct pipe_screen *screen;
     VAStatus ret;
-@@ -1195,12 +1245,25 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
+@@ -1166,12 +1216,25 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
        return VA_STATUS_ERROR_INVALID_SURFACE;
     }
  
@@ -172,7 +172,7 @@ index 170718f..4ad5ca1 100644
  
     usage = 0;
     if (flags & VA_EXPORT_SURFACE_WRITE_ONLY)
-@@ -1229,7 +1292,7 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
+@@ -1200,7 +1263,7 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
  
  #else
     VADRMPRIMESurfaceDescriptor *desc = descriptor;
@@ -181,7 +181,7 @@ index 170718f..4ad5ca1 100644
     desc->width = surf->templat.width;
     desc->height = surf->templat.height;
     desc->num_objects = 0;
-@@ -1293,7 +1356,7 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
+@@ -1264,7 +1327,7 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
     }
  
     if (flags & VA_EXPORT_SURFACE_COMPOSED_LAYERS) {
@@ -191,10 +191,10 @@ index 170718f..4ad5ca1 100644
           ret = VA_STATUS_ERROR_UNSUPPORTED_MEMORY_TYPE;
           goto fail;
 diff --git a/src/gallium/frontends/va/va_private.h b/src/gallium/frontends/va/va_private.h
-index e56a2d7..ce1ae1a 100644
+index 8a4f844..06fbe44 100644
 --- a/src/gallium/frontends/va/va_private.h
 +++ b/src/gallium/frontends/va/va_private.h
-@@ -427,6 +427,8 @@ typedef struct {
+@@ -426,6 +426,8 @@ typedef struct {
  
  typedef struct vlVaSurface {
     struct pipe_video_buffer templat, *buffer;
@@ -203,7 +203,7 @@ index e56a2d7..ce1ae1a 100644
     struct util_dynarray subpics; /* vlVaSubpicture */
     vlVaBuffer *coded_buf;
     struct pipe_video_codec *codec;
-@@ -561,6 +563,7 @@ MESAPROC VAStatus vlVaHandleVAProcPipelineParameterBufferType(vlVaDriver *drv, v
+@@ -560,6 +562,7 @@ MESAPROC VAStatus vlVaHandleVAProcPipelineParameterBufferType(vlVaDriver *drv, v
  VAStatus vlVaHandleSurfaceAllocate(vlVaDriver *drv, vlVaSurface *surface, const uint64_t *modifiers, unsigned modifiers_count);
  struct pipe_video_buffer *vlVaGetSurfaceBuffer(vlVaDriver *drv, vlVaSurface *surface);
  void vlVaSurfaceFlush(vlVaDriver *drv, vlVaSurface *surf);

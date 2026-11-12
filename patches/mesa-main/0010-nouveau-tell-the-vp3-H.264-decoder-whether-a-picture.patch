@@ -1,4 +1,4 @@
-From e9b3fcbf256ed5a4787dcabf0da6a3aa027cf2d1 Mon Sep 17 00:00:00 2001
+From 7b72be799188972e2e9b84660d6fc55a55247f71 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sun, 18 Oct 2026 17:30:06 +0200
 Subject: [PATCH 10/13] nouveau: tell the vp3 H.264 decoder whether a picture

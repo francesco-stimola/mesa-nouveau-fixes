@@ -1,4 +1,4 @@
-From d8e6133530aff6c162c8e664c34a0863222ea239 Mon Sep 17 00:00:00 2001
+From 39c0f3f7023f12b6822b9009823332565ebaabae Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Wed, 11 Nov 2026 08:55:21 +0100
 Subject: [PATCH 13/13] nv50,nvc0: clear through a driver surface on the stack

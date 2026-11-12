@@ -1,4 +1,4 @@
-From 6366012ef9c473df9bfd578eefc416c024388cca Mon Sep 17 00:00:00 2001
+From 77b75da855e07a25d13de7f5797b2a25290507fc Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Wed, 11 Nov 2026 08:52:57 +0100
 Subject: [PATCH 12/13] nv30: don't read pipe_surface templates as nv30_surface
@@ -21,10 +21,10 @@ Fixes: 718e277ab56e ("util/surface: delete more pipe_context::create_surface usa
  3 files changed, 39 insertions(+), 15 deletions(-)
 
 diff --git a/src/gallium/drivers/nouveau/nv30/nv30_clear.c b/src/gallium/drivers/nouveau/nv30/nv30_clear.c
-index 0ddcd5a..c023ac8 100644
+index 56bcf33..6c3e6a1 100644
 --- a/src/gallium/drivers/nouveau/nv30/nv30_clear.c
 +++ b/src/gallium/drivers/nouveau/nv30/nv30_clear.c
-@@ -121,6 +121,11 @@ nv30_clear(struct pipe_context *pipe, unsigned buffers,
+@@ -138,6 +138,11 @@ nv30_clear(struct pipe_context *pipe, unsigned buffers,
     nv30->state.scissor_off = 0;
  }
  
@@ -36,7 +36,7 @@ index 0ddcd5a..c023ac8 100644
  static void
  nv30_clear_render_target(struct pipe_context *pipe, struct pipe_surface *ps,
                           const union pipe_color_union *color,
-@@ -128,12 +133,15 @@ nv30_clear_render_target(struct pipe_context *pipe, struct pipe_surface *ps,
+@@ -145,12 +150,15 @@ nv30_clear_render_target(struct pipe_context *pipe, struct pipe_surface *ps,
                           bool render_condition_enabled)
  {
     struct nv30_context *nv30 = nv30_context(pipe);
@@ -53,7 +53,7 @@ index 0ddcd5a..c023ac8 100644
     rt_format = nv30_format(pipe->screen, ps->format)->hw;
     if (util_format_get_blocksize(ps->format) == 4)
        rt_format |= NV30_3D_RT_FORMAT_ZETA_Z24S8;
-@@ -186,12 +194,15 @@ nv30_clear_depth_stencil(struct pipe_context *pipe, struct pipe_surface *ps,
+@@ -203,12 +211,15 @@ nv30_clear_depth_stencil(struct pipe_context *pipe, struct pipe_surface *ps,
                           bool render_condition_enabled)
  {
     struct nv30_context *nv30 = nv30_context(pipe);

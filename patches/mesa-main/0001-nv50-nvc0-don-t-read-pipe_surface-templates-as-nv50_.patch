@@ -1,4 +1,4 @@
-From 62158d446fc3139310dbb5c39b0f4b2455f98faa Mon Sep 17 00:00:00 2001
+From c2481f9d6ce9a545d54e9a64a67b795ee3f83467 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 21:34:23 +0200
 Subject: [PATCH 01/13] nv50,nvc0: don't read pipe_surface templates as

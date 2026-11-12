@@ -1,4 +1,4 @@
-From 888727d2bd5a3d6a6e7528aef374bf95d180f8c6 Mon Sep 17 00:00:00 2001
+From cf58b3023b959d0e27e518a78350b3025d3f7aaa Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 13:41:29 +0200
 Subject: [PATCH 04/13] nv50: only push constant buffer updates through a

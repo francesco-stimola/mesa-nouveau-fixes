@@ -1,4 +1,4 @@
-From f667d2bfde6cb173ec63e6214018cc62dae60325 Mon Sep 17 00:00:00 2001
+From 357945eb6116d9b09c3de08d1055886970a57bb8 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 20:55:35 +0200
 Subject: [PATCH 06/13] nouveau: wait for the video engines before destroying a

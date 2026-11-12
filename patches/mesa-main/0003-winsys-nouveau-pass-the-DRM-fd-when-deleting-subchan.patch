@@ -1,4 +1,4 @@
-From 3d1d7d76aab2f624ff4d48aedca552ab29bd2cdc Mon Sep 17 00:00:00 2001
+From 1e5800229bd230b17bbdb5f37c4de2ca8dcc279c Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 12:21:59 +0200
 Subject: [PATCH 03/13] winsys/nouveau: pass the DRM fd when deleting

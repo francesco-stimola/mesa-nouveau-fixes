@@ -1,4 +1,4 @@
-From b888f0cd34b8a78d3a85c26824deb8fff4347dad Mon Sep 17 00:00:00 2001
+From 072fc54742fde3982e185c5c6c5d67e9997cc1a4 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sun, 18 Oct 2026 17:07:37 +0200
 Subject: [PATCH 09/13] nouveau: pass chroma_format_idc to the vp3 H.264

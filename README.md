@@ -134,8 +134,10 @@ nv30, the OpenGL driver of GeForce FX, 6 and 7 GPUs, has the mistake 0001
 fixes in nv50 and nvc0: since Mesa 25.2, `glClearTexImage` passes its clear
 hooks a template on the stack, and they read the size, pitch and offset of
 the render target past its end. 0012 fills the driver surface from the
-template instead. It was only built: no such GPU was at hand, so what the
-bug does on them was not seen.
+template instead.
+
+**Only built: no GeForce FX, 6 or 7 was at hand, so what the bug does on
+them was not seen, and there is no picture of it.**
 
 #### 0006 · Stopping a video can freeze the GPU
 

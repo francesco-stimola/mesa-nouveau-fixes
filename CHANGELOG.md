@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.0 - 2026-11-13
 
 - **Releases first.** SETUP.md now checks out the latest release after
   cloning, and the PPA takes its patches from the latest release tag

@@ -128,13 +128,13 @@ every clear. It changes nothing visible.
        alt="Kernel log after mpv starts a video. Without 0001: SURF_HEIGHT_OVERRUN traps, 35 messages per video start. With 0001: no messages.">
 </p>
 
-#### 0012 · Texture clears on GeForce FX, 6 and 7
+##### 0012 · Texture clears on GeForce FX, 6 and 7
 
-nv30, the OpenGL driver of GeForce FX, 6 and 7 GPUs, has the mistake 0001
-fixes in nv50 and nvc0: since Mesa 25.2, `glClearTexImage` passes its clear
-hooks a template on the stack, and they read the size, pitch and offset of
-the render target past its end. 0012 fills the driver surface from the
-template instead.
+0012 is the same fix for nv30, the OpenGL driver of GeForce FX, 6 and 7
+GPUs: since Mesa 25.2, `glClearTexImage` passes its clear hooks a template
+on the stack, and they read the size, pitch and offset of the render
+target past its end. As 0001 and 0013 do for nv50 and nvc0, 0012 fills a
+driver surface on the stack from the template.
 
 **Only built: no GeForce FX, 6 or 7 was at hand, so what the bug does on
 them was not seen, and there is no picture of it.**

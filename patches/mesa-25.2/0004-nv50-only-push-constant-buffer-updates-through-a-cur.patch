@@ -30,6 +30,8 @@ Only use a binding point when this context's state is on the hardware,
 the binding has been validated since it last changed, and it still
 points at this buffer. Otherwise write through the buffer's address, as
 is already done for buffers that are not bound.
+
+Fixes: 3f48548a6f6 ("nv50: reinstate dedicated constbuf push path")
 ---
  src/gallium/drivers/nouveau/nv50/nv50_transfer.c | 15 +++++++++++++--
  1 file changed, 13 insertions(+), 2 deletions(-)

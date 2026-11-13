@@ -7,28 +7,32 @@
   instead of `main`, which may hold patches still in review in Mesa. The
   PPA workflow also stops when Launchpad does not answer, instead of
   building a `+nvfix1`, and times out stalled uploads.
-- **0001, 0012 and 0013, as approved in Mesa.** Dave Airlie asked for 0008
+- **0001, 0012 and 0013, as merged in Mesa.** Dave Airlie asked for 0008
   and 0001 in a merge request of their own,
   [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135),
-  and approved it on 11 November; it waits to be merged. The patches here
+  approved it on 11 November and merged it on 12 November. The patches here
   now match it: 0001 has the reviewed code and message, and **0013**
   (nv50,nvc0: clear through a driver surface on the stack) goes with it, a
   cleanup Dave suggested that fills the driver surface on the stack
   instead of allocating one at every clear; **0012** (nv30: don't read
   pipe_surface templates as nv30_surface in clears) fixes the same texture
   clears for GeForce FX, 6 and 7, and was only built. On the GT 240M with
-  Mesa 25.2.8, checks 2, 11 and 15 gave the same results as before. 0003
-  and 0004 are in
+  Mesa 25.2.8, checks 2, 11 and 15 gave the same results as before.
+- **0003 and 0004 in their own merge request.** They are in
   [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224),
-  also at Dave's request. All of them stay in !45340 too.
+  also at Dave's request, and their messages follow his review: 0003 is now
+  "nouveau/winsys: pass the drm fd when deleting subchannel objects", and
+  0004 has a Fixes tag. The code is the same.
+- **Mesa main.** `patches/mesa-main` leaves out 0001, 0008, 0012 and 0013,
+  which are in Mesa main now; the other nine still apply to it. CI applies
+  them one at a time, since `git apply` does not chain patches that change
+  the same lines.
 - **GPUs.** The texture clear fixes reach every GPU nouveau runs OpenGL on,
   not only those it decodes video on: 0012 the NV30 and NV40 families
   (GeForce FX to 7), 0001 and 0013 everything from G80 on, Maxwell and
   later included. The README's GPU tables, its introduction, SETUP.md and
   TESTING.md now say so; such GPUs only need the patched Mesa, not the VA
   driver.
-- **CI.** The check against Mesa main applies the patches one at a time,
-  since 0013 changes lines that 0001 adds.
 - **Kepler kernel fixes.** The README no longer says whether Risto
   Pajula's kernel fixes are merged: it points to the nouveau list, where
   that can be followed, and to the separate commit that fixes the first

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **0003 and 0004 merged in Mesa.** Dave Airlie merged
+  [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224)
+  on 13 November, so `patches/mesa-main` leaves them out too; the other
+  seven still apply to Mesa main.
+- **README.** 0012 sits under 0001 and 0013 as their nv30 counterpart, and
+  the patch table shows merged patches in bold.
+
 ## 1.6.0 - 2026-11-13
 
 - **Releases first.** SETUP.md now checks out the latest release after

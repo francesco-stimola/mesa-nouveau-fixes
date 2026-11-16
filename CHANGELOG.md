@@ -4,12 +4,12 @@
 
 - **0003 and 0004 merged in Mesa.** Dave Airlie merged
   [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224)
-  on 13 November, so `patches/mesa-main` leaves them out too; the other
-  seven still apply to Mesa main.
-- **0009 and 0010 in their own merge request.** They are in
+  on 13 November, so `patches/mesa-main` leaves them out too.
+- **0009 and 0010 merged in Mesa.** Dave Airlie asked for them in a merge
+  request of their own,
   [!46327](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46327),
-  at Dave Airlie's request and with his review, and stay in !45340 until
-  it is merged.
+  and merged it on 16 November, so `patches/mesa-main` leaves them out
+  too; the other five still apply to Mesa main.
 - **README.** 0012 sits under 0001 and 0013 as their nv30 counterpart, and
   the patch table shows merged patches in bold.
 

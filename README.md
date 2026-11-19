@@ -288,7 +288,7 @@ distributions, their own patches included.
 | [0004](#0004--garbled-gtk-4-menus) | nv50: only push constant buffer updates through a current binding | **merged**, [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224) |
 | [0005](#0005--blocks-in-moving-areas-of-h264-videos) | nouveau: keep H.264 references in the same VP slot | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0006](#0006--stopping-a-video-can-freeze-the-gpu) | nouveau: wait for the video engines before destroying a vp3 decoder | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
-| [0007](#0007--converted-pictures-turn-green-and-magenta) | vl/compositor: render the V plane with its own gfx shaders | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0007](#0007--converted-pictures-turn-green-and-magenta) | vl/compositor: render the V plane with its own gfx shaders | in review, [!46487](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46487); also in [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0008](#0008--gpu-errors-with-yuyv-and-uyvy-surfaces) | nv50: size surface views by blocks when the block size differs | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
 | [0009](#0009--monochrome-h264-is-not-decoded) | nouveau: pass chroma_format_idc to the vp3 H.264 decoder | **merged**, [!46327](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46327) |
 | [0010](#0010--interlaced-h264-breaks-up) | nouveau: tell the vp3 H.264 decoder whether a picture is MBAFF | **merged**, [!46327](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46327) |

@@ -10,6 +10,10 @@
   [!46327](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46327),
   and merged it on 16 November, so `patches/mesa-main` leaves them out
   too; the other five still apply to Mesa main.
+- **0007 in its own merge request.** At Dave Airlie's request it is in
+  [!46487](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46487),
+  for the reviewers of Mesa's common video code, and stays in !45340 until
+  it is merged.
 - **README.** 0012 sits under 0001 and 0013 as their nv30 counterpart, and
   the patch table shows merged patches in bold.
 

@@ -9,11 +9,18 @@
   request of their own,
   [!46327](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46327),
   and merged it on 16 November, so `patches/mesa-main` leaves them out
-  too; the other five still apply to Mesa main.
-- **0007 in its own merge request.** At Dave Airlie's request it is in
+  too.
+- **0007 merged in Mesa.** At Dave Airlie's request it went into a merge
+  request of its own,
   [!46487](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46487),
-  for the reviewers of Mesa's common video code, and stays in !45340 until
-  it is merged.
+  for the reviewers of Mesa's common video code, merged on 23 November, so
+  `patches/mesa-main` leaves it out too; the other four still apply to
+  Mesa main. As asked in the review, its message now names 0f533b387ca,
+  the commit that gave the compute path its separate U and V shaders.
+- **0002 in its own merge request.** Also at Dave's request, it is now in
+  [!46660](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46660),
+  so [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340)
+  keeps the nouveau fixes, 0005, 0006 and 0011.
 - **README.** 0012 sits under 0001 and 0013 as their nv30 counterpart, and
   the patch table shows merged patches in bold.
 

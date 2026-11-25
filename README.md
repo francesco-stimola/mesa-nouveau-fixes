@@ -368,7 +368,7 @@ distributions, their own patches included.
 | [0013](#0001-0013--gpu-errors-at-every-video-start) | nv50,nvc0: clear through a driver surface on the stack | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
 | [0014](#0014--vc-1-simple-and-main-videos-come-out-as-garbage) | nouveau: add a start code to vc1 simple and main pictures | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0015](#0015--interlaced-vc-1-plays-on-the-cpu) | nouveau: refuse interlaced vc1 pictures on vp3 to vp5 | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
-| [0016](#0016--gstreamer-warns-about-a-driver-bug) | nouveau: report the size of exported buffers | not proposed yet |
+| [0016](#0016--gstreamer-warns-about-a-driver-bug) | nouveau: report the size of exported buffers | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 
 ### Which GPUs need which patches
 

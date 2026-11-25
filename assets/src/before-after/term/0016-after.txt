@@ -1,0 +1,4 @@
+$ ./va-export-size 1920 1080
++ object 0: reported 2097152, fd 2097152
++ object 1: reported 1114112, fd 1114112
+# the descriptor carries the size GStreamer checks

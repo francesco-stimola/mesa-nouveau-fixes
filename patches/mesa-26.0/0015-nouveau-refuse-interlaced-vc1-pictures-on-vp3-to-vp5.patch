@@ -1,7 +1,7 @@
 From 597cc6d61be32b15258d2705b7d8d68538a94540 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Wed, 25 Nov 2026 15:59:58 +0100
-Subject: [PATCH 15/15] nouveau: refuse interlaced vc1 pictures on vp3 to vp5
+Subject: [PATCH 15/16] nouveau: refuse interlaced vc1 pictures on vp3 to vp5
 
 VP gets no field information for VC-1. It decodes the second field of a
 field-interlaced frame wrongly, and the frames after it too, without any

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **0016, exported buffers report their size.** nouveau gave every
+  exported buffer a size of 0, so GStreamer's VA plugin warned about a
+  driver bug for every plane of every frame, as reported in
+  [issue #5](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/5).
+  0016 reports the real size. Not proposed to Mesa yet.
+
 ## 1.7.0 - 2026-11-25
 
 - **0014, VC-1 Simple and Main.** On VP3 to VP5 these pictures reach the

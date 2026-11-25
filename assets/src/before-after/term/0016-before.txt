@@ -1,0 +1,6 @@
+$ ./va-export-size 1920 1080
+! object 0: reported 0, fd 2097152
+! object 1: reported 0, fd 1114112
+# GStreamer's VA plugin then warns for each plane:
+! driver bug: fd size (2097152) is bigger than
+!   object descriptor size (0)

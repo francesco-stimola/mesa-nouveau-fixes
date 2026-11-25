@@ -86,3 +86,13 @@ with all eleven. The last lines on the right come from his screenshot of
 ```sh
 python3 term-gif.py term/0011-before.txt term/0011-after.txt brave-import.gif 0011
 ```
+
+0016's transcripts are the output of
+[`tests/va-export-size.c`](../../../tests/va-export-size.c) on the GT 240M,
+with every patch but 0016 and with all sixteen. The warning on the left is
+the one GStreamer's VA plugin prints for each plane when the size is 0, as
+reported in [issue #5](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/5).
+
+```sh
+python3 term-gif.py term/0016-before.txt term/0016-after.txt export-size.gif 0016
+```

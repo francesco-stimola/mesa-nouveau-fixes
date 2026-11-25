@@ -114,6 +114,23 @@ eleven.
        alt="Brave's log on a Kepler GK104. Without 0011: gbm_bo_import returns nullptr, the frame buffer cannot be created and the GPU process restarts, 3 times in 4 seconds, then the video plays with software decoding. With 0011: no such errors, and brave://media-internals shows VaapiVideoDecoder as a hardware decoder.">
 </p>
 
+#### 0016 · GStreamer warns about a driver bug
+
+When a player exports a decoded frame, the VA driver describes each buffer
+it hands over, size included. nouveau always gave a size of 0, so
+GStreamer's VA plugin, which passes frames to players such as Clapper this
+way, warns `driver bug: fd size (…) is bigger than object descriptor size
+(0)` for every plane of every frame, then reads the size from the buffer
+itself. Playback works either way, but other programs may rely on the
+size. 0016 reports the real one. Below,
+[`tests/va-export-size.c`](tests/va-export-size.c), which exports one
+surface and compares the two sizes.
+
+<p align="center">
+  <img src="assets/export-size.gif" width="100%"
+       alt="A terminal running va-export-size 1920 1080. Without 0016 both objects report size 0 against 2097152 and 1114112 bytes, the warning GStreamer prints for it is shown below; with 0016 both report the same sizes as the buffers.">
+</p>
+
 ### GPU errors and freezes
 
 <a id="0001--gpu-errors-at-every-video-start"></a>
@@ -351,6 +368,7 @@ distributions, their own patches included.
 | [0013](#0001-0013--gpu-errors-at-every-video-start) | nv50,nvc0: clear through a driver surface on the stack | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
 | [0014](#0014--vc-1-simple-and-main-videos-come-out-as-garbage) | nouveau: add a start code to vc1 simple and main pictures | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0015](#0015--interlaced-vc-1-plays-on-the-cpu) | nouveau: refuse interlaced vc1 pictures on vp3 to vp5 | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0016](#0016--gstreamer-warns-about-a-driver-bug) | nouveau: report the size of exported buffers | not proposed yet |
 
 ### Which GPUs need which patches
 
@@ -387,6 +405,7 @@ and 700 models use Fermi or Maxwell chips: check the chipset.
 | 0012 | ✓ | | | | | | | |
 | 0014 | | | | ✓ | ✓ | ✓ | ✓ | |
 | 0015 | | | | ✓ | ✓ | ✓ | ✓ | |
+| 0016 | | | ✓ | ✓ | ✓ | ✓ | ✓ | |
 
 0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
 with or without video decoding; so do 0001 and 0013, for texture clears on
@@ -404,7 +423,8 @@ these patches leave it alone, since there was no VP2 GPU to test them on.
 lets through come from nouveau's video decoder, which Maxwell and later
 lack; it was tested on Kepler. 0014 and 0015 change code that every VP3
 to VP5 decoder shares; they were tested on VP4, on the GT 240M, and the
-part of 0015 for GF100 and later GPUs was only built.
+part of 0015 for GF100 and later GPUs was only built. 0016 changes code
+every nouveau GPU runs, but only video export reads the size it sets.
 
 On Kepler, Kush Chandak tested all ten patches on a GeForce GT 710
 (GK208B): H.264 and MPEG-2 decode at 1080p, H.264 identical to software

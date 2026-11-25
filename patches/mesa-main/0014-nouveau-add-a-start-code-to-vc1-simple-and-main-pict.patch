@@ -1,7 +1,7 @@
 From 78d91b8e415651249bd419e23f3922fb4791da61 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Wed, 25 Nov 2026 15:59:57 +0100
-Subject: [PATCH 14/15] nouveau: add a start code to vc1 simple and main pictures
+Subject: [PATCH 14/16] nouveau: add a start code to vc1 simple and main pictures
 
 VP3 to VP5's BSP expects a start code in front of each VC-1 picture. The
 VA frontend only adds one for Advanced profile, so Simple and Main

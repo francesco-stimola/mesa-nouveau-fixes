@@ -421,3 +421,17 @@ After `Trying hardware decoding via vc1-vaapi-copy.`, with 0015 mpv prints
 0015 it prints `Using hardware decoding (vaapi-copy).` and no errors, and
 the pictures are wrong from the second field on. Do not try
 `ilaced_twomv.vc1` without 0015: it can hang the video engine.
+
+## 18. Exported buffers report their size (0016)
+
+Every GPU nouveau decodes video on. [`tests/va-export-size.c`](../tests/va-export-size.c)
+exports one NV12 surface and prints, for each buffer object, the size the
+driver reports and the size of the buffer itself. It needs `libva-dev`:
+
+```sh
+cc -o va-export-size tests/va-export-size.c -lva -lva-drm
+LIBVA_DRIVERS_PATH=$NVFIX ./va-export-size 1920 1080
+```
+
+With 0016 both sizes match on every line and it exits with 0. Without it
+the reported size is 0, the line ends in `<-- differs` and it exits with 2.

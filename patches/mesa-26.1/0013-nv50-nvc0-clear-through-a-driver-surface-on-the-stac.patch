@@ -1,7 +1,7 @@
 From 07a3f829254a6a876adb4d7b15cdfdd0c64a40e6 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Wed, 11 Nov 2026 08:55:21 +0100
-Subject: [PATCH 13/15] nv50,nvc0: clear through a driver surface on the stack
+Subject: [PATCH 13/16] nv50,nvc0: clear through a driver surface on the stack
 
 The clear_render_target and clear_depth_stencil hooks allocate a
 surface, with a texture reference, for every clear, only to read a few

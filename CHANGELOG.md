@@ -8,13 +8,14 @@
   VC-1 Main conformance stream SMM0015 now matches software decoding
   frame for frame. It is in review in
   [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340).
-- **0015, interlaced VC-1.** nouveau has no known way to tell VP3 to VP5
-  that a VC-1 picture is a field, so field-interlaced streams decode wrong
-  from the second field on, and one interlaced stream hung the video
-  engine. 0015 refuses interlaced VC-1 pictures, and players fall back to
-  software decoding: mpv does after three failed frames. Decoding them in
-  hardware needs to know how the decoder expects field pictures, which is
-  not documented. Also in review in !45340.
+- **0015, interlaced VC-1 on the CPU: a workaround, not a fix.** nouveau
+  has no known way to tell VP3 to VP5 that a VC-1 picture is a field, so
+  field-interlaced streams decode wrong from the second field on, and one
+  interlaced stream hung the video engine. 0015 refuses interlaced VC-1
+  pictures, so players decode them on the CPU instead: mpv falls back
+  after three failed frames. Decoding them in hardware needs a field
+  parameter that NVIDIA does not document and that we could not find by
+  testing. Also in review in !45340.
 - **0003 and 0004 merged in Mesa.** Dave Airlie merged
   [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224)
   on 13 November, so `patches/mesa-main` leaves them out too.

@@ -30,7 +30,9 @@ browsers never use it, every video start fills the kernel log with GPU
 errors, and some H.264 and VC-1 videos come out wrong. These patches fix
 that, a GTK 4 bug on GeForce 8 to 300 GPUs, and `glClearTexImage`, which
 since Mesa 25.2 clears textures wrongly on every GPU nouveau runs OpenGL on,
-from the GeForce FX on.
+from the GeForce FX on. Interlaced VC-1 is the exception: it now plays on
+the CPU instead of coming out wrong
+([0015](#0015--interlaced-vc-1-plays-on-the-cpu)).
 
 ## Fixes
 
@@ -236,15 +238,18 @@ hangs on frame 16; with 0014 all 25 frames match software decoding.
        alt="A man in a red football shirt with a ball. Without 0014 the picture is a mosaic of coloured blocks with nothing of the video in it; with 0014 it is clean.">
 </p>
 
-#### 0015 · Interlaced VC-1 comes out wrong
+#### 0015 · Interlaced VC-1 plays on the CPU
 
-On VP3 to VP5 decoders, VC-1 streams that code each field as a picture of
-its own decode wrong from the second field on, with no error, and a stream
-that also has interlaced frames hung the video engine. The decoder
-parameters nouveau knows have no way to say that a picture is a field.
-0015 refuses interlaced VC-1 pictures, so players fall back to software
-decoding: mpv does after three failed frames. Below, FFmpeg's
-field-interlaced conformance stream SA10143 in mpv.
+**This is a workaround, not a fix: interlaced VC-1 is still not decoded on
+the GPU.** On VP3 to VP5 decoders, VC-1 streams that code each field as a
+picture of its own decode wrong from the second field on, with no error,
+and a stream that also has interlaced frames hung the video engine.
+Decoding them in hardware needs a parameter that tells the decoder a
+picture is a field. H.264 and MPEG-2 have one; for VC-1 none is known,
+NVIDIA does not document it, and we found none by testing. 0015 refuses
+interlaced VC-1 pictures, so players decode them on the CPU instead: mpv
+falls back after three failed frames. Below, FFmpeg's field-interlaced
+conformance stream SA10143 in mpv.
 
 <p align="center">
   <img src="assets/vc1-interlaced.gif" width="100%"
@@ -340,7 +345,7 @@ distributions, their own patches included.
 | [0012](#0012--texture-clears-on-geforce-fx-6-and-7) | nv30: don't read pipe_surface templates as nv30_surface in clears | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
 | [0013](#0001-0013--gpu-errors-at-every-video-start) | nv50,nvc0: clear through a driver surface on the stack | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
 | [0014](#0014--vc-1-simple-and-main-videos-come-out-as-garbage) | nouveau: add a start code to vc1 simple and main pictures | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
-| [0015](#0015--interlaced-vc-1-comes-out-wrong) | nouveau: refuse interlaced vc1 pictures on vp3 to vp5 | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0015](#0015--interlaced-vc-1-plays-on-the-cpu) | nouveau: refuse interlaced vc1 pictures on vp3 to vp5 | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 
 ### Which GPUs need which patches
 
@@ -456,10 +461,11 @@ that is allowed to use VA-API, and fixed GPU clocks.
   tested.
 - **GPU clocks**, below.
 
-These decoders handle H.264, MPEG-2 and VC-1 only. VP4 (GT21x) is designed for
-H.264 High up to 1080p30 (level 4.1); 1080p60 is beyond it. Sites that serve
-VP9 or AV1 need an H.264-only setting, such as the enhanced-h264ify extension
-for YouTube.
+These decoders handle H.264, MPEG-2 and VC-1 only, and interlaced VC-1
+plays on the CPU ([0015](#0015--interlaced-vc-1-plays-on-the-cpu)). VP4
+(GT21x) is designed for H.264 High up to 1080p30 (level 4.1); 1080p60 is
+beyond it. Sites that serve VP9 or AV1 need an H.264-only setting, such as
+the enhanced-h264ify extension for YouTube.
 
 ### GPU clocks
 

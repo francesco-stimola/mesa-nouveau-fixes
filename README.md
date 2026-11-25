@@ -256,6 +256,11 @@ conformance stream SA10143 in mpv.
        alt="A fairground ride against a blue sky, in mpv. Without 0015 blocks appear in the sky, and a few frames later the picture breaks up into a grid of blocks with burnt-out colours; with 0015 mpv decodes in software and the picture stays clean.">
 </p>
 
+If you know how the decoder expects VC-1 field pictures, or have a trace of
+NVIDIA's driver decoding one, please
+[open an issue](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/new/choose):
+with that, interlaced VC-1 could be decoded in hardware.
+
 #### 0007 · Converted pictures turn green and magenta
 
 Players that cannot use the decoded surfaces directly ask VA-API to convert

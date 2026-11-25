@@ -364,7 +364,7 @@ built from (`apt-cache policy mesa-libgallium` lists it, without `+nvfix`),
 extract them and point the EGL loader at them:
 
 ```sh
-v=25.2.8-0ubuntu0.24.04.4
+v=25.2.8-0ubuntu0.24.04.5
 apt-get download mesa-libgallium=$v libegl-mesa0=$v
 for d in *.deb; do dpkg-deb -x $d stock; done
 L=$PWD/stock/usr/lib/x86_64-linux-gnu

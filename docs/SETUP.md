@@ -56,7 +56,7 @@ sudo apt upgrade
 ```
 
 Its versions add `+nvfixN` to Ubuntu's, for example
-`25.2.8-0ubuntu0.24.04.4+nvfix1`, so apt prefers them. When Ubuntu releases a
+`25.2.8-0ubuntu0.24.04.5+nvfix1`, so apt prefers them. When Ubuntu releases a
 new Mesa, the PPA rebuilds it with the patches within a day; until then apt
 installs Ubuntu's version, without them.
 

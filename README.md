@@ -55,6 +55,17 @@ decode, video processing or `vaPutImage` into that surface; drivers that
 decode into progressive buffers never take that path. The exported frames
 match software decoding up to rounding: 0.05 on a 0–255 scale on average.
 
+In Mesa's review the VA frontend should no longer handle interlaced
+surfaces, so in
+[!46660](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46660)
+0002 is replaced by a series that gives nouveau's decoders progressive
+buffers: on VP3 to VP5 the decoder weaves PPP's two fields into them, on
+VP2 each buffer keeps an interlaced one for the decoder, and the frontend
+drops interlaced surfaces. On the GT 240M it gives the same frames and the
+same Firefox CPU use as 0002. There was no VP2 GPU to test it on, so a
+report from one, here or on the merge request, would help. 0002 stays here
+until the series is merged.
+
 <p align="center">
   <img src="assets/firefox-export.gif" width="100%"
        alt="Firefox decoder log. Without 0002: vaExportSurfaceHandle fails and Firefox decodes 472 frames on the CPU in 20 seconds, some of them late. With 0002: 479 frames decoded on the GPU, none on the CPU.">
@@ -283,7 +294,7 @@ distributions, their own patches included.
 | Patch | Commit | In Mesa |
 |---|---|---|
 | [0001](#0001-0013--gpu-errors-at-every-video-start) | nv50,nvc0: don't read pipe_surface templates as nv50_surface in clears | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
-| [0002](#0002--firefox-decodes-on-the-cpu) | frontends/va: export interlaced surfaces through a progressive copy | in review, [!46660](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46660) |
+| [0002](#0002--firefox-decodes-on-the-cpu) | frontends/va: export interlaced surfaces through a progressive copy | replaced in review by a driver series, [!46660](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46660) |
 | [0003](#0003--hardware-decoding-stops-when-a-clip-loops) | nouveau/winsys: pass the drm fd when deleting subchannel objects | **merged**, [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224) |
 | [0004](#0004--garbled-gtk-4-menus) | nv50: only push constant buffer updates through a current binding | **merged**, [!46224](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46224) |
 | [0005](#0005--blocks-in-moving-areas-of-h264-videos) | nouveau: keep H.264 references in the same VP slot | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |

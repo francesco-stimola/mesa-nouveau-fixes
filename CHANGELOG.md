@@ -21,6 +21,17 @@
   [!46660](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46660),
   so [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340)
   keeps the nouveau fixes, 0005, 0006 and 0011.
+- **0002 replaced in Mesa's review.** In !46660 the VA frontend should no
+  longer handle interlaced surfaces, so the merge request now has a series
+  that gives nouveau's VP2 to VP5 decoders progressive buffers and drops
+  interlaced surfaces from the frontend. On the GT 240M it gives the same
+  frames and the same Firefox CPU use as 0002, and makes
+  `deinterlace_vaapi` work, which on Mesa main gives garbled frames on
+  nouveau. VP2 is untested there. The patches here keep 0002 until the
+  series is merged.
+- **Docs.** The examples in SETUP.md and TESTING.md use Ubuntu's current
+  Mesa, 25.2.8-0ubuntu0.24.04.5, which the PPA rebuilt with the patches on
+  18 November.
 - **README.** 0012 sits under 0001 and 0013 as their nv30 counterpart, and
   the patch table shows merged patches in bold.
 

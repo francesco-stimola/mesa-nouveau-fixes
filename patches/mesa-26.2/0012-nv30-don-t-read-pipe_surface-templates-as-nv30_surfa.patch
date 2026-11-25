@@ -1,7 +1,7 @@
 From 4b80dab42a1bc7218f9af08163f23ef4105cdfc5 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Wed, 11 Nov 2026 08:52:57 +0100
-Subject: [PATCH 12/13] nv30: don't read pipe_surface templates as nv30_surface
+Subject: [PATCH 12/15] nv30: don't read pipe_surface templates as nv30_surface
  in clears
 
 Since 718e277ab56e, util_clear_texture_as_surface() passes the clear

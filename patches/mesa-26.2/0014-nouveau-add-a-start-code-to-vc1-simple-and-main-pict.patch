@@ -1,0 +1,42 @@
+From 04067fde474f862b06af883a70a3dae34f146a6a Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Wed, 25 Nov 2026 15:59:57 +0100
+Subject: [PATCH 14/15] nouveau: add a start code to vc1 simple and main
+ pictures
+
+VP3 to VP5's BSP expects a start code in front of each VC-1 picture. The
+VA frontend only adds one for Advanced profile, so Simple and Main
+pictures decode to garbage, and VP can hang on a later picture.
+
+Add the frame start code in front of Simple and Main pictures.
+
+Tested on a GeForce GT 240M (VP4) with FFmpeg through VA-API: the 25
+frames of the VC-1 Main conformance stream SMM0015 now match software
+decoding. Before, they were garbage and VP hung after the 16th.
+---
+ src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
+index a81090b..92b8da4 100644
+--- a/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
++++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
+@@ -220,6 +220,18 @@ nouveau_vp3_bsp_begin(struct nouveau_vp3_decoder *dec)
+    memset(dec->bsp_ptr, 0, 0x200);
+ #endif
+    dec->bsp_ptr += 0x200;
++
++   /* BSP expects a start code in front of each VC-1 picture. Advanced
++    * profile bitstreams come with one, Simple and Main ones don't.
++    */
++   if (u_reduce_video_profile(dec->base.profile) == PIPE_VIDEO_FORMAT_VC1 &&
++       dec->base.profile != PIPE_VIDEO_PROFILE_VC1_ADVANCED) {
++      static const uint8_t start_code[] = { 0x00, 0x00, 0x01, 0x0d };
++
++      memcpy(dec->bsp_ptr, start_code, sizeof(start_code));
++      dec->bsp_ptr += sizeof(start_code);
++      str_bsp->w0[0] += sizeof(start_code);
++   }
+ }
+ 
+ void

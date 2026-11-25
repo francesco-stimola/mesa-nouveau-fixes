@@ -34,6 +34,19 @@
   of its method 0x700, which selects field output, is cleared. Only VP2
   still weaves, now with a NIR shader in nv50's 3D blitter, as asked in
   the review.
+- **0014, VC-1 Simple and Main.** On VP3 to VP5 these pictures reach the
+  decoder without the start code it expects, so they decode into garbage
+  and can hang the video engine. 0014 adds it: on the GT 240M, FFmpeg's
+  VC-1 Main conformance stream SMM0015 now matches software decoding
+  frame for frame. It is in review in
+  [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340).
+- **0015, interlaced VC-1.** nouveau has no known way to tell VP3 to VP5
+  that a VC-1 picture is a field, so field-interlaced streams decode wrong
+  from the second field on, and one interlaced stream hung the video
+  engine. 0015 refuses interlaced VC-1 pictures, and players fall back to
+  software decoding: mpv does after three failed frames. Decoding them in
+  hardware needs to know how the decoder expects field pictures, which is
+  not documented. Also in review in !45340.
 - **Docs.** The examples in SETUP.md and TESTING.md use Ubuntu's current
   Mesa, 25.2.8-0ubuntu0.24.04.5, which the PPA rebuilt with the patches on
   18 November.

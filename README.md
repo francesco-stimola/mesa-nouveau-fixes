@@ -27,10 +27,10 @@
 nouveau can decode H.264, MPEG-2 and VC-1 in hardware on GeForce 8 (G84 and
 later) to GeForce 700 (Kepler) GPUs. `mpv --hwdec=vaapi-copy` works, but
 browsers never use it, every video start fills the kernel log with GPU
-errors, and some H.264 videos come out wrong. These patches fix that, a
-GTK 4 bug on GeForce 8 to 300 GPUs, and `glClearTexImage`, which since Mesa
-25.2 clears textures wrongly on every GPU nouveau runs OpenGL on, from the
-GeForce FX on.
+errors, and some H.264 and VC-1 videos come out wrong. These patches fix
+that, a GTK 4 bug on GeForce 8 to 300 GPUs, and `glClearTexImage`, which
+since Mesa 25.2 clears textures wrongly on every GPU nouveau runs OpenGL on,
+from the GeForce FX on.
 
 ## Fixes
 
@@ -222,6 +222,35 @@ Below, a monochrome conformance stream next to software decoding.
        alt="Three panels. Software decoding and With 0009 show the same monochrome video, a man in a hard hat talking. Without 0009 shows an unrelated colour picture of a building site, left in video memory.">
 </p>
 
+#### 0014 · VC-1 Simple and Main videos come out as garbage
+
+On VP3 to VP5 decoders, VC-1 in Simple and Main profile, the codec of
+Windows Media Video 9 files, decodes into garbage and can hang the video
+engine. The decoder expects a start code in front of every picture, and
+only Advanced profile streams carry one. Below, the first 15 frames of
+FFmpeg's VC-1 Main conformance stream SMM0015: without 0014 the video engine
+hangs on frame 16; with 0014 all 25 frames match software decoding.
+
+<p align="center">
+  <img src="assets/vc1-main.gif" width="100%"
+       alt="A man in a red football shirt with a ball. Without 0014 the picture is a mosaic of coloured blocks with nothing of the video in it; with 0014 it is clean.">
+</p>
+
+#### 0015 · Interlaced VC-1 comes out wrong
+
+On VP3 to VP5 decoders, VC-1 streams that code each field as a picture of
+its own decode wrong from the second field on, with no error, and a stream
+that also has interlaced frames hung the video engine. The decoder
+parameters nouveau knows have no way to say that a picture is a field.
+0015 refuses interlaced VC-1 pictures, so players fall back to software
+decoding: mpv does after three failed frames. Below, FFmpeg's
+field-interlaced conformance stream SA10143 in mpv.
+
+<p align="center">
+  <img src="assets/vc1-interlaced.gif" width="100%"
+       alt="A fairground ride against a blue sky, in mpv. Without 0015 blocks appear in the sky, and a few frames later the picture breaks up into a grid of blocks with burnt-out colours; with 0015 mpv decodes in software and the picture stays clean.">
+</p>
+
 #### 0007 · Converted pictures turn green and magenta
 
 Players that cannot use the decoded surfaces directly ask VA-API to convert
@@ -310,6 +339,8 @@ distributions, their own patches included.
 | [0011](#0011--brave-decodes-on-the-cpu-on-kepler) | nvc0: accept tiled modifiers for planar YUV formats | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0012](#0012--texture-clears-on-geforce-fx-6-and-7) | nv30: don't read pipe_surface templates as nv30_surface in clears | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
 | [0013](#0001-0013--gpu-errors-at-every-video-start) | nv50,nvc0: clear through a driver surface on the stack | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
+| [0014](#0014--vc-1-simple-and-main-videos-come-out-as-garbage) | nouveau: add a start code to vc1 simple and main pictures | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0015](#0015--interlaced-vc-1-comes-out-wrong) | nouveau: refuse interlaced vc1 pictures on vp3 to vp5 | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 
 ### Which GPUs need which patches
 
@@ -344,6 +375,8 @@ and 700 models use Fermi or Maxwell chips: check the chipset.
 | 0010 | | | | ✓ | ✓ | ✓ | ✓ | |
 | 0011 | | | | | | ✓ | ✓ | |
 | 0012 | ✓ | | | | | | | |
+| 0014 | | | | ✓ | ✓ | ✓ | ✓ | |
+| 0015 | | | | ✓ | ✓ | ✓ | ✓ | |
 
 0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
 with or without video decoding; so do 0001 and 0013, for texture clears on
@@ -359,7 +392,9 @@ way, in their own decoder code (`nv84_video_bsp.c`, `nv84_video_vp.c`);
 these patches leave it alone, since there was no VP2 GPU to test them on.
 0011 changes code that every GF100 and later GPU runs, but the frames it
 lets through come from nouveau's video decoder, which Maxwell and later
-lack; it was tested on Kepler.
+lack; it was tested on Kepler. 0014 and 0015 change code that every VP3
+to VP5 decoder shares; they were tested on VP4, on the GT 240M, and the
+part of 0015 for GF100 and later GPUs was only built.
 
 On Kepler, Kush Chandak tested all ten patches on a GeForce GT 710
 (GK208B): H.264 and MPEG-2 decode at 1080p, H.264 identical to software

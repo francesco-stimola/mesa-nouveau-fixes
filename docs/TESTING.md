@@ -385,3 +385,39 @@ with Mesa 25.2.8:
 
 The GT 240M row was measured again on 11 November 2026 with 0001 as
 reviewed in Mesa and 0013, with the same results.
+
+## 16. VC-1 Simple and Main decode (0014)
+
+VP3 to VP5 only. VC-1 decoding is exact too, so compare with software
+decoding as in check 8, on `SMM0015.rcv`, a VC-1 Main stream from
+[FFmpeg's test suite](https://fate-suite.ffmpeg.org/vc1/):
+
+```sh
+curl -O https://fate-suite.ffmpeg.org/vc1/SMM0015.rcv
+ffmpeg -v error -i SMM0015.rcv -pix_fmt nv12 -f framemd5 sw.md5
+LIBVA_DRIVERS_PATH=$NVFIX ffmpeg -v error -hwaccel vaapi -hwaccel_output_format vaapi \
+       -i SMM0015.rcv -vf hwdownload,format=nv12 -f framemd5 hw.md5
+diff <(grep -v '^#' sw.md5 | cut -d, -f6) <(grep -v '^#' hw.md5 | cut -d, -f6) | grep -c '^>'
+```
+
+With 0014 no frame of the 25 differs. Without it every frame is garbage
+and the video engine hangs on frame 16, so test a driver without 0014 only
+with 0006 and `-frames:v 15`.
+
+## 17. Interlaced VC-1 falls back to software decoding (0015)
+
+VP3 to VP5 only. `SA10143.vc1`, from the same test suite, codes every
+field as a picture of its own. Play it in mpv through the VA driver:
+
+```sh
+curl -O https://fate-suite.ffmpeg.org/vc1/SA10143.vc1
+LIBVA_DRIVERS_PATH=$NVFIX mpv -v --hwdec=vaapi-copy --vo=null --frames=20 SA10143.vc1 2>&1 |
+       grep -E 'hardware decoding|software decoding'
+```
+
+After `Trying hardware decoding via vc1-vaapi-copy.`, with 0015 mpv prints
+`Error while decoding frame (hardware decoding)!` three times, then
+`Using software decoding.`, and the kernel log has no GPU errors. Without
+0015 it prints `Using hardware decoding (vaapi-copy).` and no errors, and
+the pictures are wrong from the second field on. Do not try
+`ilaced_twomv.vc1` without 0015: it can hang the video engine.

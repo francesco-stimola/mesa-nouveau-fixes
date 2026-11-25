@@ -42,7 +42,25 @@ python3 video-gif.py --ref sw \
 sh grab.sh $WITHOUT FRext_HPCAMAPALQ_BRCM_B.264 196 235 2 before
 sh grab.sh $WITH FRext_HPCAMAPALQ_BRCM_B.264 196 235 2 after
 python3 video-gif.py before after h264-interlaced.gif 0010 0 0 352 288 1.25 100
+
+# 0014: without it the video engine hangs on frame 16, so both drivers
+# decode only the first 15 frames (the driver without 0014 has 0006)
+FRAMES=15 sh grab.sh $WITHOUT SMM0015.rcv 0 14 1 before
+FRAMES=15 sh grab.sh $WITH SMM0015.rcv 0 14 1 after
+python3 video-gif.py before after vc1-main.gif 0014 0 0 720 576 0.6 200
+
+# 0015: mpv, which falls back to software decoding when the driver refuses
+# the pictures
+for s in before:$WITHOUT after:$WITH; do
+  LIBVA_DRIVERS_PATH=${s#*:} mpv --no-config --hwdec=vaapi-copy --vo=image \
+    --vo-image-format=png --vo-image-outdir=${s%%:*} --frames=20 --no-audio SA10143.vc1
+done
+python3 video-gif.py --note "With 0015 the driver refuses these pictures and mpv decodes them in software." \
+        before after vc1-interlaced.gif 0015 0 0 720 480 0.6 200
 ```
+
+`SMM0015.rcv` (VC-1 Main) and `SA10143.vc1` (VC-1 Advanced, field
+interlaced) come from [FFmpeg's test suite](https://fate-suite.ffmpeg.org/vc1/).
 
 ## Terminal panels
 

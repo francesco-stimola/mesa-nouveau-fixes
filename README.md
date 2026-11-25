@@ -59,12 +59,16 @@ In Mesa's review the VA frontend should no longer handle interlaced
 surfaces, so in
 [!46660](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46660)
 0002 is replaced by a series that gives nouveau's decoders progressive
-buffers: on VP3 to VP5 the decoder weaves PPP's two fields into them, on
-VP2 each buffer keeps an interlaced one for the decoder, and the frontend
-drops interlaced surfaces. On the GT 240M it gives the same frames and the
-same Firefox CPU use as 0002. There was no VP2 GPU to test it on, so a
-report from one, here or on the merge request, would help. 0002 stays here
-until the series is merged.
+buffers, and the frontend drops interlaced surfaces. On VP3 to VP5 the
+video post-processor (PPP) writes the whole frame straight into them: bit
+4 of its method 0x700 selects field output, and the series clears it for
+progressive buffers. On VP2 each buffer keeps an interlaced one for the
+decoder, which a shader on the 3D engine weaves into it after each
+picture. On the GT 240M it gives the same frames and the same Firefox CPU
+use as 0002. There was no VP2 GPU to test it on: its weave only ran with
+the GT 240M's own decoder output fed through it. A report from a VP2 GPU,
+here or on the merge request, would help. 0002 stays here until the
+series is merged.
 
 <p align="center">
   <img src="assets/firefox-export.gif" width="100%"

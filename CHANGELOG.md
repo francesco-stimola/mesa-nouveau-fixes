@@ -29,6 +29,11 @@
   `deinterlace_vaapi` work, which on Mesa main gives garbled frames on
   nouveau. VP2 is untested there. The patches here keep 0002 until the
   series is merged.
+- **PPP's frame mode.** On VP3 to VP5 the series no longer weaves fields:
+  the video post-processor writes progressive buffers directly once bit 4
+  of its method 0x700, which selects field output, is cleared. Only VP2
+  still weaves, now with a NIR shader in nv50's 3D blitter, as asked in
+  the review.
 - **Docs.** The examples in SETUP.md and TESTING.md use Ubuntu's current
   Mesa, 25.2.8-0ubuntu0.24.04.5, which the PPA rebuilt with the patches on
   18 November.

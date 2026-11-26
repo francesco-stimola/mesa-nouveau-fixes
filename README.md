@@ -487,7 +487,10 @@ that is allowed to use VA-API, and fixed GPU clocks.
 - **GPU clocks**, below.
 
 These decoders handle H.264, MPEG-2 and VC-1 only, and interlaced VC-1
-plays on the CPU ([0015](#0015--interlaced-vc-1-plays-on-the-cpu)). VP4
+plays on the CPU ([0015](#0015--interlaced-vc-1-plays-on-the-cpu)).
+MPEG-1 and MPEG-4 part 2 (DivX, Xvid) always play on the CPU: VA-API has
+no MPEG-1 profile, and Mesa kept MPEG-4 part 2 off by default until it
+removed it in Mesa 26.0. VP4
 (GT21x) is designed for H.264 High up to 1080p30 (level 4.1); 1080p60 is
 beyond it. Sites that serve VP9 or AV1 need an H.264-only setting, such as
 the enhanced-h264ify extension for YouTube.

@@ -8,7 +8,7 @@
 
 ### Hardware video decoding in Firefox and Brave on older NVIDIA GPUs
 
-**Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, H.264 pictures that match software decoding, no GPU errors on video playback, and GTK 4 menus that draw correctly. On every GPU nouveau runs OpenGL on, from the GeForce FX on: texture clears that work.**
+**Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, H.264 and VC-1 pictures that match software decoding, no GPU errors on video playback, and GTK 4 menus that draw correctly. On every GPU nouveau runs OpenGL on, from the GeForce FX on: texture clears that work.**
 
 [![Checks](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml/badge.svg)](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml)
 [![Latest release](https://img.shields.io/github/v/release/francesco-stimola/mesa-nouveau-fixes?sort=semver&label=release)](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)

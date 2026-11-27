@@ -1,0 +1,9 @@
+$ vainfo | grep H264
+  VAProfileH264ConstrainedBaseline: VAEntrypointVLD
+  VAProfileH264Main               : VAEntrypointVLD
+  VAProfileH264High               : VAEntrypointVLD
+# no High10
+$ ffmpeg -hwaccel vaapi -i PPH10I1_Panasonic_A.264 -f framemd5 gpu.md5 …
+Failed setup for format vaapi: hwaccel initialisation returned error.
+# FFmpeg decodes the stream in software
++ 10 of 10 frames match software decoding

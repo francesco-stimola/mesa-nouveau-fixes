@@ -2,24 +2,28 @@
 """Put two sequences of decoded frames side by side in a before/after GIF,
 in the style of assets/gtk-menus.gif.
 
-Usage: video-gif.py [--ref <software dir>] [--note <text>] <before dir>
-                    <after dir> <out.gif> <patch> <x> <y> <w> <h> [scale]
-                    [frame ms]
+Usage: video-gif.py [--ref <software dir>] [--diff <gain>] [--note <text>]
+                    <before dir> <after dir> <out.gif> <patch> <x> <y> <w> <h>
+                    [scale] [frame ms]
 
 The frames are cropped to w x h at (x, y), then scaled by `scale`. With
---ref, a first panel shows the same frames decoded in software; --note adds
-a line of text under the panels.
+--ref, a first panel shows the same frames decoded in software; with --diff,
+a last panel shows how far the luma of the two sequences differs, multiplied
+by gain, for errors too small to see; --note adds text under the panels,
+one line for each line of the argument.
 """
 import os
 import sys
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 args = sys.argv[1:]
-ref = note = None
-while args[0] in ("--ref", "--note"):
+ref = note = diff = None
+while args[0] in ("--ref", "--diff", "--note"):
     if args[0] == "--ref":
         ref = args[1]
+    elif args[0] == "--diff":
+        diff = int(args[1])
     else:
         note = args[1]
     args = args[2:]
@@ -32,7 +36,7 @@ GAP, BAR, PAD = 16, 52, 16
 BG = (246, 246, 247)
 FONT = ImageFont.truetype("/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf", 22)
 NOTE_FONT = ImageFont.truetype("/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf", 20)
-NOTE = 40 if note else 0
+NOTE = 40 + 28 * note.count("\n") if note else 0
 LABELS = [
     (f"Without {patch}", (192, 28, 40)),
     (f"With {patch}", (38, 162, 105)),
@@ -41,6 +45,9 @@ sources = [before, after]
 if ref:
     LABELS.insert(0, ("Software decoding", (110, 110, 120)))
     sources.insert(0, ref)
+if diff:
+    LABELS.append((f"Difference ×{diff}", (110, 110, 120)))
+    sources.append(None)
 
 pw, ph = round(w * scale), round(h * scale)
 size = (PAD * 2 + pw * len(sources) + GAP * (len(sources) - 1), BAR + ph + PAD + NOTE)
@@ -50,10 +57,16 @@ for name in names:
     canvas = Image.new("RGB", size, BG)
     draw = ImageDraw.Draw(canvas)
     if note:
-        draw.text((PAD + 2, BAR + ph + 12), note, font=NOTE_FONT, fill=(40, 40, 46))
+        for i, line in enumerate(note.split("\n")):
+            draw.text((PAD + 2, BAR + ph + 12 + 28 * i), line, font=NOTE_FONT, fill=(40, 40, 46))
     for k, src in enumerate(sources):
         px = PAD + k * (pw + GAP)
-        shot = Image.open(os.path.join(src, name)).convert("RGB").crop((x, y, x + w, y + h))
+        if src is None:
+            a, b = (Image.open(os.path.join(d, name)).convert("L").crop((x, y, x + w, y + h))
+                    for d in (before, after))
+            shot = ImageChops.difference(a, b).point(lambda v: min(255, v * diff)).convert("RGB")
+        else:
+            shot = Image.open(os.path.join(src, name)).convert("RGB").crop((x, y, x + w, y + h))
         if scale != 1.0:
             shot = shot.resize((pw, ph), Image.Resampling.LANCZOS)
         canvas.paste(shot, (px, BAR))

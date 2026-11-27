@@ -49,18 +49,32 @@ FRAMES=15 sh grab.sh $WITHOUT SMM0015.rcv 0 14 1 before
 FRAMES=15 sh grab.sh $WITH SMM0015.rcv 0 14 1 after
 python3 video-gif.py before after vc1-main.gif 0014 0 0 720 576 0.6 200
 
-# 0015: mpv, which falls back to software decoding when the driver refuses
-# the pictures
+# 0015: frames saved by mpv; the count in the note compares each frame's
+# framemd5 checksum with FFmpeg's software decoding
 for s in before:$WITHOUT after:$WITH; do
   LIBVA_DRIVERS_PATH=${s#*:} mpv --no-config --hwdec=vaapi-copy --vo=image \
     --vo-image-format=png --vo-image-outdir=${s%%:*} --frames=20 --no-audio SA10143.vc1
 done
-python3 video-gif.py --note "With 0015 the driver refuses these pictures and mpv decodes them in software." \
+python3 video-gif.py --note "Without 0015 the GPU decodes the second field of each frame wrongly.
+Without 0015, 30 of 30 frames differ from software decoding; with 0015, none." \
         before after vc1-interlaced.gif 0015 0 0 720 480 0.6 200
+
+# 0018: the error is too small to see at first, so a third panel shows how
+# far the two sequences differ, 32 times over; with 0018 every frame matches
+# software decoding. The count in the note compares each frame's framemd5
+# checksum with FFmpeg's software decoding.
+sh grab.sh $WITHOUT vc1-wmapro.ism 0 119 2 before
+sh grab.sh $WITH vc1-wmapro.ism 0 119 2 after
+python3 video-gif.py --diff 32 \
+        --note "Difference from software decoding ×32: without 0018 it starts at the bottom edge and creeps up.
+Without 0018, 118 of 120 frames differ from software decoding; with 0018, none." \
+        before after vc1-height.gif 0018 0 0 240 104 1.5 100
 ```
 
 `SMM0015.rcv` (VC-1 Main) and `SA10143.vc1` (VC-1 Advanced, field
-interlaced) come from [FFmpeg's test suite](https://fate-suite.ffmpeg.org/vc1/).
+interlaced) come from [FFmpeg's test suite](https://fate-suite.ffmpeg.org/vc1/),
+`vc1-wmapro.ism` (VC-1 Advanced, 240×104, with B frames) from its
+[`isom` samples](https://fate-suite.ffmpeg.org/isom/).
 
 ## Terminal panels
 
@@ -95,4 +109,13 @@ reported in [issue #5](https://github.com/francesco-stimola/mesa-nouveau-fixes/i
 
 ```sh
 python3 term-gif.py term/0016-before.txt term/0016-after.txt export-size.gif 0016
+```
+
+0017 compares each frame with FFmpeg's software decoding through
+`framemd5`, with every patch but 0017 and with all of them.
+`PPH10I1_Panasonic_A.264` comes from FFmpeg's H.264 conformance suite
+(`FRext`).
+
+```sh
+python3 term-gif.py term/0017-before.txt term/0017-after.txt h264-high10.gif 0017
 ```

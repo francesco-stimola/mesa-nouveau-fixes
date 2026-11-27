@@ -1,4 +1,4 @@
-From 3256b84a2787d4fb02c88b48c99073e8c00e6ea8 Mon Sep 17 00:00:00 2001
+From d9b2f2764910d0b77b2e4911484f97be963c15c0 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Fri, 27 Nov 2026 19:40:35 +0100
 Subject: [PATCH 18/18] nouveau: give the vc1 vp the picture height

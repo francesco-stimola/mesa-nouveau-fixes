@@ -1,4 +1,4 @@
-From 7ebe0a12eff4f13463e53c815054679aa95dd0c5 Mon Sep 17 00:00:00 2001
+From 2fd90e883382e089a5dac9dfd5a0a82ea4a5bd0b Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Fri, 27 Nov 2026 19:59:39 +0100
 Subject: [PATCH 17/18] nouveau: don't advertise H.264 High 10, 4:2:2 and 4:4:4
@@ -22,7 +22,7 @@ matching software decoding.
  2 files changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video.c b/src/gallium/drivers/nouveau/nouveau_vp3_video.c
-index 489e5ec..e2d83a1 100644
+index 24fff70..fce68d9 100644
 --- a/src/gallium/drivers/nouveau/nouveau_vp3_video.c
 +++ b/src/gallium/drivers/nouveau/nouveau_vp3_video.c
 @@ -513,7 +513,7 @@ nouveau_vp3_screen_get_video_param(struct pipe_screen *pscreen,

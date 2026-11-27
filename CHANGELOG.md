@@ -7,8 +7,10 @@
   by MrNoname3 showed, while nouveau always loaded the one for progressive
   pictures. 0015 now loads all three and picks one for each picture:
   FFmpeg's interlaced streams SA10143 and ilaced_twomv match software
-  decoding on the GT 240M. Interlaced pictures are still refused, and
-  decoded on the CPU, where this is untested (VP3, Fermi and Kepler), when
+  decoding on the GT 240M. MrNoname3 tested it on a GeForce 210 and on a
+  Fermi GeForce GT 520M, with the same results: thanks! Interlaced
+  pictures are still refused, and decoded on the CPU, where this is
+  untested (VP3 and Kepler), when
   `vuc-vc1-1` or `vuc-vc1-2` is missing, and through VDPAU in the
   `mesa-25.2` series.
 - **0018, VC-1 with a height that is not a multiple of 16.** The decoder

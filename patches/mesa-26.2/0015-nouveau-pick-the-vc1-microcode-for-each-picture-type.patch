@@ -1,4 +1,4 @@
-From ed9ed23b3e664533b8bf5a6b6c27d85c9122ecc5 Mon Sep 17 00:00:00 2001
+From d2237d0bf946e1691f04dcdf6228624936017792 Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Wed, 25 Nov 2026 15:59:58 +0100
 Subject: [PATCH 15/18] nouveau: pick the vc1 microcode for each picture type
@@ -9,16 +9,17 @@ progressive one, VP decodes the second field of a frame wrongly, and the
 frames after it too, and a stream mixing fields with interlaced frames
 hangs it.
 
-Load all three and pick one for each picture. Where this is untested (VP3,
-Fermi and VP5) or vuc-vc1-1 or 2 is missing, refuse interlaced pictures
-instead, so that end_frame fails and the application can fall back to
-software decoding.
+Load all three and pick one for each picture. Where this is untested (VP3
+and VP5) or vuc-vc1-1 or 2 is missing, refuse interlaced pictures instead,
+so that end_frame fails and the application can fall back to software
+decoding.
 
 Tested on a GeForce GT 240M (VP4) with FFmpeg's interlaced VC-1 streams:
 SA10143 and ilaced_twomv now match software decoding, with no GPU errors
-(ilaced_twomv, 1080 lines high, also needs 0018). With vuc-vc1-1 missing
-or unreadable, interlaced pictures are refused as before. Progressive
-VC-1, H.264 and MPEG-2 decode as before. The nvc0 part is only built.
+(ilaced_twomv, 1080 lines high, also needs 0018). MrNoname3 got the same
+results with Mesa main on a GeForce 210 and on a GeForce GT 520M (Fermi,
+nvc0 code). With vuc-vc1-1 missing or unreadable, interlaced pictures are
+refused as before. Progressive VC-1, H.264 and MPEG-2 decode as before.
 ---
  .../drivers/nouveau/nouveau_vp3_video.c       | 76 ++++++++++++++-----
  .../drivers/nouveau/nouveau_vp3_video.h       | 41 ++++++++++
@@ -30,7 +31,7 @@ VC-1, H.264 and MPEG-2 decode as before. The nvc0 part is only built.
  7 files changed, 143 insertions(+), 29 deletions(-)
 
 diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video.c b/src/gallium/drivers/nouveau/nouveau_vp3_video.c
-index 7753f22..107824a 100644
+index 7753f22..4d19310 100644
 --- a/src/gallium/drivers/nouveau/nouveau_vp3_video.c
 +++ b/src/gallium/drivers/nouveau/nouveau_vp3_video.c
 @@ -301,31 +301,20 @@ static void vp4_getpath(enum pipe_video_profile profile, char *path)
@@ -128,13 +129,13 @@ index 7753f22..107824a 100644
 +      return 1;
 +
 +   /* The microcode for interlaced pictures, see nouveau_vp3_vc1_fw_image().
-+    * Only tested on GT21x so far: on VP3 and Fermi, and unless both files
++    * Only tested on GT21x and Fermi so far: on VP3, and unless both files
 +    * are there, interlaced pictures are refused.
 +    */
 +   if (u_reduce_video_profile(profile) == PIPE_VIDEO_FORMAT_VC1) {
 +      char paths[2][PATH_MAX];
 +      struct stat s;
-+      bool present = vp4 && chipset < 0xc0;
++      bool present = vp4 && chipset < 0xd0;
 +
 +      dec->vc1_fw_sizes[0] = dec->fw_sizes;
 +      for (unsigned i = 0; i < 2; ++i) {

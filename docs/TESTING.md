@@ -409,8 +409,8 @@ with 0014 no frame differs.
 
 ## 17. Interlaced VC-1 decodes on the GPU (0015)
 
-VP4 of GT21x only: on VP3, Fermi and Kepler interlaced pictures are still
-refused. `SA10143.vc1`, from the same test suite, codes every field as a
+VP4 of GT21x and Fermi (GF100 to GF116) only: on VP3 and on VP5 (GF117,
+GF119 and Kepler) interlaced pictures are still refused. `SA10143.vc1`, from the same test suite, codes every field as a
 picture of its own; `ilaced_twomv.vc1` mixes fields with interlaced frames.
 Compare both with software decoding as in check 16:
 

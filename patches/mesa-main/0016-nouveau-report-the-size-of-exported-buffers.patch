@@ -1,4 +1,4 @@
-From c3146c5d0239ce20acc9f631d51ad6b5a27057d6 Mon Sep 17 00:00:00 2001
+From 8b8b4bda4933f5bd9fd1f64df2e3458dd9833e6d Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Wed, 25 Nov 2026 21:40:04 +0100
 Subject: [PATCH 16/18] nouveau: report the size of exported buffers

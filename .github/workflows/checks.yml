@@ -112,7 +112,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { release: '43', patches: mesa-26.0 }
+          - { release: '43', patches: mesa-25.3 }
           - { release: '44', patches: mesa-26.2 }
     container: fedora:${{ matrix.release }}
     env:

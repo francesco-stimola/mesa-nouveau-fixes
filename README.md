@@ -13,7 +13,7 @@
 [![Checks](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml/badge.svg)](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml)
 [![Latest release](https://img.shields.io/github/v/release/francesco-stimola/mesa-nouveau-fixes?sort=semver&label=release)](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Mesa](https://img.shields.io/badge/Mesa-25.2%20%7C%2026.0%20%7C%2026.1%20%7C%2026.2%20%7C%20main-green.svg)](#patches)
+[![Mesa](https://img.shields.io/badge/Mesa-25.2%20%7C%2025.3%20%7C%2026.0%20%7C%2026.1%20%7C%2026.2%20%7C%20main-green.svg)](#patches)
 <br>
 [![PPA for Ubuntu 24.04](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.launchpad.net%2Fdevel%2F~francesco-stimola%2F%2Barchive%2Fubuntu%2Fmesa-nouveau-fixes%3Fws.op%3DgetPublishedSources%26source_name%3Dmesa%26exact_match%3Dtrue%26status%3DPublished%26distro_series%3Dhttps%3A%2F%2Fapi.launchpad.net%2Fdevel%2Fubuntu%2Fnoble&query=%24.entries%5B0%5D.source_package_version&label=PPA%2024.04&color=E95420&cacheSeconds=3600)](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
 [![PPA for Ubuntu 26.04](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.launchpad.net%2Fdevel%2F~francesco-stimola%2F%2Barchive%2Fubuntu%2Fmesa-nouveau-fixes%3Fws.op%3DgetPublishedSources%26source_name%3Dmesa%26exact_match%3Dtrue%26status%3DPublished%26distro_series%3Dhttps%3A%2F%2Fapi.launchpad.net%2Fdevel%2Fubuntu%2Fresolute&query=%24.entries%5B0%5D.source_package_version&label=PPA%2026.04&color=E95420&cacheSeconds=3600)](https://launchpad.net/~francesco-stimola/+archive/ubuntu/mesa-nouveau-fixes)
@@ -379,8 +379,9 @@ the video engine on 25 November, without 0015.
 ## Patches
 
 Each patch exists for Mesa 25.2 ([`patches/mesa-25.2`](patches/mesa-25.2),
-what Ubuntu 24.04 ships), Mesa 26.0 ([`patches/mesa-26.0`](patches/mesa-26.0),
-Ubuntu 26.04 and Fedora 43), Mesa 26.1 ([`patches/mesa-26.1`](patches/mesa-26.1),
+what Ubuntu 24.04 ships), Mesa 25.3 ([`patches/mesa-25.3`](patches/mesa-25.3),
+Fedora 43), Mesa 26.0 ([`patches/mesa-26.0`](patches/mesa-26.0), Ubuntu
+26.04), Mesa 26.1 ([`patches/mesa-26.1`](patches/mesa-26.1),
 Debian 13 backports and testing), Mesa 26.2 ([`patches/mesa-26.2`](patches/mesa-26.2),
 Debian unstable, Fedora 44 and 45) and Mesa main
 ([`patches/mesa-main`](patches/mesa-main), for upstream review, without the

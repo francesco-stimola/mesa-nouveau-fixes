@@ -35,7 +35,7 @@ Each distribution ships its own Mesa version, and each folder in
 | Ubuntu 24.04 and 26.04, and distributions based on them | 25.2, 26.0 | [the PPA](#ubuntu-the-ppa) | – |
 | Debian 13 with backports, Debian testing | 26.1 | [rebuild Debian's packages](#debian) | `mesa-26.1` |
 | Debian unstable | 26.2 | [rebuild Debian's packages](#debian) | `mesa-26.2` |
-| Fedora 43 | 25.3 | [rebuild Fedora's packages](#fedora) | `mesa-26.0` |
+| Fedora 43 | 25.3 | [rebuild Fedora's packages](#fedora) | `mesa-25.3` |
 | Fedora 44 and 45 | 26.2 | [rebuild Fedora's packages](#fedora) | `mesa-26.2` |
 | any | | [try the VA driver without installing](#try-it-without-installing) | the nearest |
 
@@ -125,7 +125,7 @@ sudo dnf install rpm-build dnf-plugins-core
 ./scripts/build-fedora-package.sh patches/mesa-26.2
 ```
 
-On Fedora 43, use `patches/mesa-26.0`. The script asks for sudo once, to
+On Fedora 43, use `patches/mesa-25.3`. The script asks for sudo once, to
 install the build dependencies of the source package it downloaded. The
 packages end up in
 `mesa-nvfix/rpmbuild/RPMS`, and the script ends with the `sudo dnf install`

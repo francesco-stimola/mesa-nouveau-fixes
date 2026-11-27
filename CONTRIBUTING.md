@@ -1,7 +1,7 @@
 # Contributing
 
 Fixes from other people are welcome as pull requests. Every patch here is
-carried for five Mesa versions, and only real hardware shows whether a video
+carried for six Mesa versions, and only real hardware shows whether a video
 fix works, so a pull request should:
 
 - add the patch to every series under `patches/`, or say which ones it does

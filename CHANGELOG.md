@@ -21,6 +21,10 @@
   FFmpeg decodes those files in software.
 - **0014 drops an assert** that made debug builds of Mesa abort on the
   first VC-1 Simple picture.
+- **`patches/mesa-25.3`, for Fedora 43.** Fedora 43 ships Mesa 25.3, not
+  26.0: `patches/mesa-26.0` used to apply to it, but the new 0015 and 0017
+  change code that differs between the two. The new folder has the same
+  patches, with 0015 and 0017 written for Mesa 25.3.
 - **CONTRIBUTING.md** explains how to send fixes as pull requests.
 
 ## 1.8.0 - 2026-11-25

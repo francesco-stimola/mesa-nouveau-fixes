@@ -1,21 +1,25 @@
-From f8949de04af50fce9edf3423a596ddd4b1a8686e Mon Sep 17 00:00:00 2001
+From 19617c640939058d24a00d598b913bb0cf6165bc Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Wed, 25 Nov 2026 15:59:57 +0100
-Subject: [PATCH 14/16] nouveau: add a start code to vc1 simple and main
+Subject: [PATCH 14/18] nouveau: add a start code to vc1 simple and main
  pictures
 
 VP3 to VP5's BSP expects a start code in front of each VC-1 picture. The
 VA frontend only adds one for Advanced profile, so Simple and Main
 pictures decode to garbage, and VP can hang on a later picture.
 
-Add the frame start code in front of Simple and Main pictures.
+Add the frame start code in front of Simple and Main pictures, and drop
+the assert against Simple in nouveau_vp3_fill_picparm_vc1_vp, which made
+debug builds abort on the first Simple picture.
 
 Tested on a GeForce GT 240M (VP4) with FFmpeg through VA-API: the 25
 frames of the VC-1 Main conformance stream SMM0015 now match software
-decoding. Before, they were garbage and VP hung after the 16th.
+decoding. Before, they were garbage and VP hung after the 16th. FFmpeg's
+Simple samples sb-spl-q80 and sb-spl-q94 match software decoding too.
 ---
  src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c  |  1 -
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
 diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_bsp.c
 index fa04557..0c225ee 100644
@@ -40,3 +44,15 @@ index fa04557..0c225ee 100644
  }
  
  void
+diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
+index 3f120e4..96ede64 100644
+--- a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
++++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
+@@ -453,7 +453,6 @@ nouveau_vp3_fill_picparm_vc1_vp(struct nouveau_vp3_decoder *dec,
+ {
+    struct vc1_picparm_vp *vc = (struct vc1_picparm_vp *)map;
+    unsigned ring;
+-   assert(dec->base.profile != PIPE_VIDEO_PROFILE_VC1_SIMPLE);
+    *is_ref = d->picture_type <= 1;
+ 
+    nouveau_vp3_ycbcr_offsets(dec, &vc->ofs[1], &vc->ofs[3], &vc->ofs[4]);

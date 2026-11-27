@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased
+
+- **0015 now decodes interlaced VC-1 on the GPU.** NVIDIA's driver loads a
+  different VP microcode for each picture type, as traces of it recorded
+  by MrNoname3 showed, while nouveau always loaded the one for progressive
+  pictures. 0015 now loads all three and picks one for each picture:
+  FFmpeg's interlaced streams SA10143 and ilaced_twomv match software
+  decoding on the GT 240M. Interlaced pictures are still refused, and
+  decoded on the CPU, where this is untested (VP3, Fermi and Kepler), when
+  `vuc-vc1-1` or `vuc-vc1-2` is missing, and through VDPAU in the
+  `mesa-25.2` series.
+- **0018, VC-1 with a height that is not a multiple of 16.** The decoder
+  got the height rounded up to the next macroblock, so the bottom rows
+  went wrong and the error spread upwards, in 1080-line videos too. 0018
+  passes the picture height, as NVIDIA's driver does.
+- **0017, H.264 High 10 on the CPU.** nouveau listed `VAProfileH264High10`
+  although its decoders only handle 8-bit video, so FFmpeg sent 10-bit
+  files to the GPU and every frame came out wrong. 0017 stops at High, and
+  FFmpeg decodes those files in software.
+- **0014 drops an assert** that made debug builds of Mesa abort on the
+  first VC-1 Simple picture.
+- **CONTRIBUTING.md** explains how to send fixes as pull requests.
+
 ## 1.8.0 - 2026-11-25
 
 - **0016, exported buffers report their size.** nouveau gave every

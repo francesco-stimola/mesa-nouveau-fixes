@@ -1,7 +1,7 @@
-From c21691cba1c1582be5014dea8b57fe06d0328a1b Mon Sep 17 00:00:00 2001
+From 0d095e7c2530e952baf3ff0e4245b9b1f6f4f92a Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Wed, 25 Nov 2026 21:40:04 +0100
-Subject: [PATCH 16/16] nouveau: report the size of exported buffers
+Subject: [PATCH 16/18] nouveau: report the size of exported buffers
 
 nouveau_screen_bo_get_handle never set whandle->size, so
 vaExportSurfaceHandle gave every object a size of 0. GStreamer's VA

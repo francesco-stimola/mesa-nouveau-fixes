@@ -1,0 +1,50 @@
+From bac2b7e185d77c7fb0aba8e1e54ce539d47904bd Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Thu, 26 Nov 2026 10:37:35 +0100
+Subject: [PATCH 17/18] nouveau: don't advertise H.264 High 10, 4:2:2 and 4:4:4
+
+The VP2 to VP5 decoders only handle 8-bit 4:2:0 H.264: they take NV12
+surfaces only and never read the bit depth or chroma format. Both
+get_video_param functions still report every H.264 profile as supported,
+so the VA frontend lists VAProfileH264High10 and FFmpeg uses it for
+10-bit streams instead of decoding them in software.
+
+Only report H.264 profiles up to High.
+
+Tested on a GeForce GT 240M (VP4) with FFmpeg's High 10 conformance
+streams PPH10I1 to PPH10I7 and a 10-bit x264 clip with P and B frames:
+before, FFmpeg decoded them on the GPU and every frame came out wrong;
+now it decodes them in software. 8-bit H.264 still decodes on the GPU,
+matching software decoding.
+---
+ src/gallium/drivers/nouveau/nouveau_vp3_video.c | 2 +-
+ src/gallium/drivers/nouveau/nv50/nv84_video.c   | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video.c b/src/gallium/drivers/nouveau/nouveau_vp3_video.c
+index a0ce96d..7b9b9cc 100644
+--- a/src/gallium/drivers/nouveau/nouveau_vp3_video.c
++++ b/src/gallium/drivers/nouveau/nouveau_vp3_video.c
+@@ -513,7 +513,7 @@ nouveau_vp3_screen_get_video_param(struct pipe_screen *pscreen,
+       /* VP3 does not support MPEG4, VP4+ do. */
+       return entrypoint == PIPE_VIDEO_ENTRYPOINT_BITSTREAM &&
+          profile >= PIPE_VIDEO_PROFILE_MPEG1 &&
+-         profile < PIPE_VIDEO_PROFILE_HEVC_MAIN &&
++         profile <= PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH &&
+          (!vp3 || codec != PIPE_VIDEO_FORMAT_MPEG4) &&
+          firmware_present(pscreen, profile);
+    case PIPE_VIDEO_CAP_NPOT_TEXTURES:
+diff --git a/src/gallium/drivers/nouveau/nv50/nv84_video.c b/src/gallium/drivers/nouveau/nv50/nv84_video.c
+index e2538c1..e77538a 100644
+--- a/src/gallium/drivers/nouveau/nv50/nv84_video.c
++++ b/src/gallium/drivers/nouveau/nv50/nv84_video.c
+@@ -818,7 +818,8 @@ nv84_screen_get_video_param(struct pipe_screen *pscreen,
+    switch (param) {
+    case PIPE_VIDEO_CAP_SUPPORTED:
+       codec = u_reduce_video_profile(profile);
+-      return (codec == PIPE_VIDEO_FORMAT_MPEG4_AVC ||
++      return ((codec == PIPE_VIDEO_FORMAT_MPEG4_AVC &&
++               profile <= PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH) ||
+               codec == PIPE_VIDEO_FORMAT_MPEG12) &&
+          firmware_present(pscreen, codec);
+    case PIPE_VIDEO_CAP_NPOT_TEXTURES:

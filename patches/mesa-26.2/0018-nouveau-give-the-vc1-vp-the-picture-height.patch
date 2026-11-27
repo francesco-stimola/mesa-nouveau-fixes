@@ -1,0 +1,35 @@
+From 01158a17160b1f279d6aa78de6cbd9e182a0f8ed Mon Sep 17 00:00:00 2001
+From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
+Date: Fri, 27 Nov 2026 19:40:19 +0100
+Subject: [PATCH 18/18] nouveau: give the vc1 vp the picture height
+
+The VC-1 VP parameters take the macroblock-aligned height, while NVIDIA's
+driver passes the picture height there, 1080 for a 1920x1080 stream. When
+the height is not a multiple of 16, motion vectors pointing below the
+picture then read the decoded rows of the last macroblock row instead of
+the repeated bottom edge, and the error spreads through the following
+frames.
+
+Pass the picture height.
+
+Tested on a GeForce GT 240M (VP4): FFmpeg's sample vc1-wmapro.ism,
+240x104, now matches software decoding; before, 118 of its 120 frames
+differed, starting from the bottom edge. With 0015, the 1920x1080
+interlaced stream ilaced_twomv matches too.
+---
+ src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
+index 63264a7..fc70b4f 100644
+--- a/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
++++ b/src/gallium/drivers/nouveau/nouveau_vp3_video_vp.c
+@@ -377,7 +377,7 @@ nouveau_vp3_fill_picparm_vc1_vp(struct nouveau_vp3_decoder *dec,
+    vc->ofs[5] = vc->ofs[3];
+    vc->ofs[0] = vc->ofs[2] = 0;
+    vc->width = dec->base.width;
+-   vc->height = mb(dec->base.height)<<4;
++   vc->height = dec->base.height;
+    vc->unk0c = vc->unk10 = mb(dec->base.width)<<4; // Stride
+    vc->pad = vc->pad2 = 0;
+    nouveau_vp3_inter_sizes(dec, 1, &ring, &vc->bucket_size, &vc->inter_ring_data_size);

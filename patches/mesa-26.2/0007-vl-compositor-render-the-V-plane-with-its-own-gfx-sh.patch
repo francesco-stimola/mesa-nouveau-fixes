@@ -1,7 +1,7 @@
-From 06766ac85e822dcb96e5f3615105490bcd12ec4c Mon Sep 17 00:00:00 2001
+From 59c8e83888e651b549c5de253beb71c3f73263ed Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sun, 18 Oct 2026 16:19:29 +0200
-Subject: [PATCH 07/16] vl/compositor: render the V plane with its own gfx
+Subject: [PATCH 07/18] vl/compositor: render the V plane with its own gfx
  shaders
 
 0f533b387ca ("gallium/vl: Implement rendering to 3-plane YUV formats")

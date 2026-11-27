@@ -1,7 +1,7 @@
-From 8a05f1fadf503ba4e0fc9d94d74c001f48e06821 Mon Sep 17 00:00:00 2001
+From 36c5a9b826378ab626893ea63d83ba2527c217bc Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 11:35:02 +0200
-Subject: [PATCH 02/16] frontends/va: export interlaced surfaces through a
+Subject: [PATCH 02/18] frontends/va: export interlaced surfaces through a
  progressive copy
 
 Drivers without PIPE_VIDEO_CAP_SUPPORTS_PROGRESSIVE (nouveau, on every

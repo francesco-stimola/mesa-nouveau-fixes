@@ -295,7 +295,8 @@ Chromium as [issue 582204270](https://issues.chromium.org/issues/582204270).
 
 ### Sites that serve H.264
 
-These GPUs decode H.264, MPEG-2 and VC-1 only. VP4 (GT21x) is designed for
+These GPUs decode H.264, MPEG-2 and VC-1 only, and only 8-bit video: with
+0017, 10-bit H.264 (High 10) goes to the CPU. VP4 (GT21x) is designed for
 H.264 High up to 1080p30 (level 4.1); 1080p60 is beyond it. YouTube serves
 VP9 or AV1 by default: an extension such as enhanced-h264ify, for Firefox or
 Chromium browsers, makes it serve H.264.

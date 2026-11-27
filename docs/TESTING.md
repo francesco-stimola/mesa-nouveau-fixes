@@ -402,25 +402,39 @@ diff <(grep -v '^#' sw.md5 | cut -d, -f6) <(grep -v '^#' hw.md5 | cut -d, -f6) |
 
 With 0014 no frame of the 25 differs. Without it every frame is garbage
 and the video engine hangs on frame 16, so test a driver without 0014 only
-with 0006 and `-frames:v 15`.
+with 0006 and `-frames:v 15`. VC-1 Simple compares the same way, for
+example with
+[`sb-spl-q80.avi`](https://samples.ffmpeg.org/V-codecs/WMV9/sb_wmv9_samples/sb-spl-q80.avi):
+with 0014 no frame differs.
 
-## 17. Interlaced VC-1 falls back to software decoding (0015)
+## 17. Interlaced VC-1 decodes on the GPU (0015)
 
-VP3 to VP5 only. `SA10143.vc1`, from the same test suite, codes every
-field as a picture of its own. Play it in mpv through the VA driver:
+VP4 of GT21x only: on VP3, Fermi and Kepler interlaced pictures are still
+refused. `SA10143.vc1`, from the same test suite, codes every field as a
+picture of its own; `ilaced_twomv.vc1` mixes fields with interlaced frames.
+Compare both with software decoding as in check 16:
 
 ```sh
 curl -O https://fate-suite.ffmpeg.org/vc1/SA10143.vc1
+curl -O https://fate-suite.ffmpeg.org/vc1/ilaced_twomv.vc1
+```
+
+With 0015 no frame differs: 30 of 30 for `SA10143.vc1`, and 13 of 13 for
+`ilaced_twomv.vc1`, which is 1080 lines high and so needs 0018 too.
+Without 0015 every frame of `SA10143.vc1` is wrong from its second field
+on, and `ilaced_twomv.vc1` can hang the video engine: do not try it.
+
+Where interlaced pictures are refused, mpv falls back to software decoding:
+
+```sh
 LIBVA_DRIVERS_PATH=$NVFIX mpv -v --hwdec=vaapi-copy --vo=null --frames=20 SA10143.vc1 2>&1 |
        grep -E 'hardware decoding|software decoding'
 ```
 
-After `Trying hardware decoding via vc1-vaapi-copy.`, with 0015 mpv prints
+There, after `Trying hardware decoding via vc1-vaapi-copy.`, mpv prints
 `Error while decoding frame (hardware decoding)!` three times, then
-`Using software decoding.`, and the kernel log has no GPU errors. Without
-0015 it prints `Using hardware decoding (vaapi-copy).` and no errors, and
-the pictures are wrong from the second field on. Do not try
-`ilaced_twomv.vc1` without 0015: it can hang the video engine.
+`Using software decoding.`, and the kernel log has no GPU errors. On a
+GT21x it prints `Using hardware decoding (vaapi-copy).` and no errors.
 
 ## 18. Exported buffers report their size (0016)
 
@@ -435,3 +449,39 @@ LIBVA_DRIVERS_PATH=$NVFIX ./va-export-size 1920 1080
 
 With 0016 both sizes match on every line and it exits with 0. Without it
 the reported size is 0, the line ends in `<-- differs` and it exits with 2.
+
+## 19. H.264 High 10 goes to the CPU (0017)
+
+Every GPU nouveau decodes H.264 on. `vainfo` must not list
+`VAProfileH264High10`, and FFmpeg must decode a 10-bit stream in software.
+`PPH10I1_Panasonic_A.264` is one of the High 10 streams of FFmpeg's H.264
+conformance suite:
+
+```sh
+LIBVA_DRIVERS_PATH=$NVFIX vainfo | grep H264
+curl -O https://fate-suite.ffmpeg.org/h264-conformance/FRext/PPH10I1_Panasonic_A.264
+ffmpeg -v error -i PPH10I1_Panasonic_A.264 -pix_fmt yuv420p10le -f framemd5 sw.md5
+LIBVA_DRIVERS_PATH=$NVFIX ffmpeg -v warning -hwaccel vaapi -i PPH10I1_Panasonic_A.264 \
+       -pix_fmt yuv420p10le -f framemd5 hw.md5
+diff <(grep -v '^#' sw.md5 | cut -d, -f6) <(grep -v '^#' hw.md5 | cut -d, -f6) | grep -c '^>'
+```
+
+With 0017 the list stops at `VAProfileH264High`, the second `ffmpeg`
+prints `Failed setup for format vaapi: hwaccel initialisation returned
+error.` and no frame of the 10 differs. Without it `vainfo` lists High 10,
+FFmpeg decodes the stream on the GPU and every frame is wrong. 8-bit H.264
+must still decode on the GPU, as in check 8.
+
+## 20. VC-1 with a height that is not a multiple of 16 decodes (0018)
+
+VP3 to VP5 only. `vc1-wmapro.ism`, from FFmpeg's
+[`isom` samples](https://fate-suite.ffmpeg.org/isom/), is 240×104. Compare
+it with software decoding as in check 16, with `-an` in both commands for
+its audio track:
+
+```sh
+curl -O https://fate-suite.ffmpeg.org/isom/vc1-wmapro.ism
+```
+
+With 0018 no frame of the 120 differs. Without it 118 do, from the bottom
+edge up: VP took the height rounded up to 112 lines.

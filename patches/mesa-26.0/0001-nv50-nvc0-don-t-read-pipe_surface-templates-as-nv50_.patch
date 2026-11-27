@@ -1,7 +1,7 @@
 From c95253e0fabdfb8f36a981217874e95f122a192f Mon Sep 17 00:00:00 2001
 From: Francesco Stimola <francesco-stimola@users.noreply.github.com>
 Date: Sat, 17 Oct 2026 21:34:23 +0200
-Subject: [PATCH 01/16] nv50,nvc0: don't read pipe_surface templates as
+Subject: [PATCH 01/18] nv50,nvc0: don't read pipe_surface templates as
  nv50_surface in clears
 
 get_surfaces() in the VA frontend returns plain pipe_surface templates,

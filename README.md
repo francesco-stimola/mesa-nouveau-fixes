@@ -551,6 +551,11 @@ Kepler video fixes and development kernels such as linux-next, to
 problems that also happen without these patches to
 [Mesa](https://gitlab.freedesktop.org/mesa/mesa/-/work_items).
 
+## Contributing
+
+Pull requests with fixes are welcome: [CONTRIBUTING.md](CONTRIBUTING.md)
+says what they need.
+
 ## License
 
 MIT, like the Mesa files the patches modify. See [LICENSE](LICENSE).

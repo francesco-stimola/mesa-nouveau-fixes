@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.9.0 - 2026-11-27
 
 - **0015 now decodes interlaced VC-1 on the GPU.** NVIDIA's driver loads a
   different VP microcode for each picture type, as traces of it recorded
@@ -10,7 +10,7 @@
   decoding on the GT 240M. MrNoname3 tested it on a GeForce 210 and on a
   Fermi GeForce GT 520M, with the same results: thanks! Interlaced
   pictures are still refused, and decoded on the CPU, where this is
-  untested (VP3 and Kepler), when
+  untested (VP3, and VP5: GF117, GF119 and Kepler), when
   `vuc-vc1-1` or `vuc-vc1-2` is missing, and through VDPAU in the
   `mesa-25.2` series.
 - **0018, VC-1 with a height that is not a multiple of 16.** The decoder
@@ -27,7 +27,8 @@
   26.0: `patches/mesa-26.0` used to apply to it, but the new 0015 and 0017
   change code that differs between the two. The new folder has the same
   patches, with 0015 and 0017 written for Mesa 25.3.
-- **CONTRIBUTING.md** explains how to send fixes as pull requests.
+- **CONTRIBUTING.md** explains how to send fixes as pull requests, and a
+  pull request template asks for what it needs.
 
 ## 1.8.0 - 2026-11-25
 

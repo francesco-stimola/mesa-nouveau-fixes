@@ -31,7 +31,8 @@ errors, and some H.264 and VC-1 videos come out wrong. These patches fix
 that, a GTK 4 bug on GeForce 8 to 300 GPUs, and `glClearTexImage`, which
 since Mesa 25.2 clears textures wrongly on every GPU nouveau runs OpenGL on,
 from the GeForce FX on. Interlaced VC-1 now decodes on the GPU on GT21x
-GPUs; on other GPUs it plays on the CPU until someone tests it there
+and Fermi (GF100–GF116) GPUs; on other GPUs it plays on the CPU until
+someone tests it there
 ([0015](#0015--interlaced-vc-1-comes-out-wrong)).
 
 ## Fixes
@@ -273,7 +274,8 @@ Below, SA10143 in mpv.
        alt="A fairground ride against a blue sky, in mpv. Without 0015 blocks cover the sky and the picture breaks up; with 0015 the GPU decodes it clean, and no frame of the 30 differs from software decoding.">
 </p>
 
-So far this is tested on GT21x GPUs only. On VP3, Fermi and Kepler, when
+So far this is tested on GT21x GPUs, and on Fermi by MrNoname3 on a
+GeForce GT 520M. On VP3 and VP5 (GF117, GF119 and Kepler), when
 the firmware files `vuc-vc1-1` or `vuc-vc1-2` are missing, and through
 VDPAU in the `mesa-25.2` series, 0015 refuses interlaced VC-1 pictures
 instead, so players decode them on the CPU: mpv falls back after three
@@ -405,10 +407,10 @@ distributions, their own patches included.
 | [0012](#0012--texture-clears-on-geforce-fx-6-and-7) | nv30: don't read pipe_surface templates as nv30_surface in clears | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
 | [0013](#0001-0013--gpu-errors-at-every-video-start) | nv50,nvc0: clear through a driver surface on the stack | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
 | [0014](#0014--vc-1-simple-and-main-videos-come-out-as-garbage) | nouveau: add a start code to vc1 simple and main pictures | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
-| [0015](#0015--interlaced-vc-1-comes-out-wrong) | nouveau: pick the vc1 microcode for each picture type | an earlier version in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0015](#0015--interlaced-vc-1-comes-out-wrong) | nouveau: pick the vc1 microcode for each picture type | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0016](#0016--gstreamer-warns-about-a-driver-bug) | nouveau: report the size of exported buffers | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
-| [0017](#0017--10-bit-h264-comes-out-wrong) | nouveau: don't advertise H.264 High 10, 4:2:2 and 4:4:4 | not submitted yet |
-| [0018](#0018--vc-1-goes-wrong-at-the-bottom-edge) | nouveau: give the vc1 vp the picture height | not submitted yet |
+| [0017](#0017--10-bit-h264-comes-out-wrong) | nouveau: don't advertise H.264 High 10, 4:2:2 and 4:4:4 | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0018](#0018--vc-1-goes-wrong-at-the-bottom-edge) | nouveau: give the vc1 vp the picture height | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 
 ### Which GPUs need which patches
 
@@ -464,9 +466,10 @@ these patches leave it alone, since there was no VP2 GPU to test them on.
 0011 changes code that every GF100 and later GPU runs, but the frames it
 lets through come from nouveau's video decoder, which Maxwell and later
 lack; it was tested on Kepler. 0014, 0015 and 0018 change code that every
-VP3 to VP5 decoder shares; they were tested on VP4, on the GT 240M. 0015
-decodes interlaced VC-1 only on GT21x for now and refuses it elsewhere,
-and its part for GF100 and later GPUs was only built. 0016 changes code
+VP3 to VP5 decoder shares; they were tested on VP4, on the GT 240M, and
+by MrNoname3 on a GeForce 210 and a Fermi GeForce GT 520M. 0015 decodes
+interlaced VC-1 only on GT21x and Fermi for now and refuses it elsewhere.
+0016 changes code
 every nouveau GPU runs, but only video export reads the size it sets.
 0017 changes the profile list of every GPU nouveau decodes H.264 on, VP2
 included.
@@ -533,8 +536,14 @@ that is allowed to use VA-API, and fixed GPU clocks.
 
 These decoders handle H.264, MPEG-2 and VC-1 only, and 8-bit video only:
 10-bit H.264 plays on the CPU ([0017](#0017--10-bit-h264-comes-out-wrong)).
-Interlaced VC-1 plays on the CPU except on GT21x GPUs
-([0015](#0015--interlaced-vc-1-comes-out-wrong)).
+Interlaced VC-1 plays on the CPU except on GT21x and Fermi (GF100–GF116)
+GPUs ([0015](#0015--interlaced-vc-1-comes-out-wrong)). A few VC-1 Simple
+and Main streams still differ from software decoding: at high quantizers
+a near-black sample at a block corner can be off by one, which can't be
+seen; in FFmpeg's SMM0005 some B frames differ near the right edge, the
+same way with NVIDIA's driver; and two old WMV3 samples from before the
+standard lose their P frames, which NVIDIA's driver doesn't decode right
+either.
 MPEG-1 and MPEG-4 part 2 (DivX, Xvid) always play on the CPU: VA-API has
 no MPEG-1 profile, and Mesa kept MPEG-4 part 2 off by default until it
 removed it in Mesa 26.0. VP4

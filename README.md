@@ -8,7 +8,7 @@
 
 ### Hardware video decoding in Firefox and Brave on older NVIDIA GPUs
 
-**Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, H.264 and VC-1 pictures that match software decoding, no GPU errors on video playback, and GTK 4 menus that draw correctly. On every GPU nouveau runs OpenGL on, from the GeForce FX on: texture clears that work.**
+**Mesa fixes for nouveau, GeForce 8 to 700 series: VA-API that browsers can use, H.264 and most VC-1 pictures that match software decoding, no GPU errors on video playback, and GTK 4 menus that draw correctly. On every GPU nouveau runs OpenGL on, from the GeForce FX on: texture clears that work.**
 
 [![Checks](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml/badge.svg)](https://github.com/francesco-stimola/mesa-nouveau-fixes/actions/workflows/checks.yml)
 [![Latest release](https://img.shields.io/github/v/release/francesco-stimola/mesa-nouveau-fixes?sort=semver&label=release)](https://github.com/francesco-stimola/mesa-nouveau-fixes/releases/latest)
@@ -30,9 +30,9 @@ browsers never use it, every video start fills the kernel log with GPU
 errors, and some H.264 and VC-1 videos come out wrong. These patches fix
 that, a GTK 4 bug on GeForce 8 to 300 GPUs, and `glClearTexImage`, which
 since Mesa 25.2 clears textures wrongly on every GPU nouveau runs OpenGL on,
-from the GeForce FX on. Interlaced VC-1 is the exception: it now plays on
-the CPU instead of coming out wrong
-([0015](#0015--interlaced-vc-1-plays-on-the-cpu)).
+from the GeForce FX on. Interlaced VC-1 now decodes on the GPU on GT21x
+GPUs; on other GPUs it plays on the CPU until someone tests it there
+([0015](#0015--interlaced-vc-1-comes-out-wrong)).
 
 ## Fixes
 
@@ -255,28 +255,61 @@ hangs on frame 16; with 0014 all 25 frames match software decoding.
        alt="A man in a red football shirt with a ball. Without 0014 the picture is a mosaic of coloured blocks with nothing of the video in it; with 0014 it is clean.">
 </p>
 
-#### 0015 · Interlaced VC-1 plays on the CPU
+#### 0015 · Interlaced VC-1 comes out wrong
 
-**This is a workaround, not a fix: interlaced VC-1 is still not decoded on
-the GPU.** On VP3 to VP5 decoders, VC-1 streams that code each field as a
-picture of its own decode wrong from the second field on, with no error,
-and a stream that also has interlaced frames hung the video engine.
-Decoding them in hardware needs a parameter that tells the decoder a
-picture is a field. H.264 and MPEG-2 have one; for VC-1 none is known,
-NVIDIA does not document it, and we found none by testing. 0015 refuses
-interlaced VC-1 pictures, so players decode them on the CPU instead: mpv
-falls back after three failed frames. Below, FFmpeg's field-interlaced
-conformance stream SA10143 in mpv.
+On VP3 to VP5 decoders, VC-1 streams that code each field as a picture of
+its own decode wrong from the second field on, with no error, and a stream
+that also has interlaced frames hung the video engine. NVIDIA's driver
+loads a different microcode into the decoder for each type of VC-1
+picture, progressive, field or interlaced frame, as traces of it that
+MrNoname3 recorded with valgrind-mmt showed; nouveau always loaded the one
+for progressive pictures. 0015 loads all three and picks one for each
+picture. On the GT 240M, FFmpeg's interlaced streams SA10143 and
+ilaced_twomv now match software decoding, ilaced_twomv with 0018 too.
+Below, SA10143 in mpv.
 
 <p align="center">
   <img src="assets/vc1-interlaced.gif" width="100%"
-       alt="A fairground ride against a blue sky, in mpv. Without 0015 blocks appear in the sky, and a few frames later the picture breaks up into a grid of blocks with burnt-out colours; with 0015 mpv decodes in software and the picture stays clean.">
+       alt="A fairground ride against a blue sky, in mpv. Without 0015 blocks cover the sky and the picture breaks up; with 0015 the GPU decodes it clean, and no frame of the 30 differs from software decoding.">
 </p>
 
-If you know how the decoder expects VC-1 field pictures, or have a trace of
-NVIDIA's driver decoding one, please
-[open an issue](https://github.com/francesco-stimola/mesa-nouveau-fixes/issues/new/choose):
-with that, interlaced VC-1 could be decoded in hardware.
+So far this is tested on GT21x GPUs only. On VP3, Fermi and Kepler, when
+the firmware files `vuc-vc1-1` or `vuc-vc1-2` are missing, and through
+VDPAU in the `mesa-25.2` series, 0015 refuses interlaced VC-1 pictures
+instead, so players decode them on the CPU: mpv falls back after three
+failed frames. A test on one of those GPUs
+([check 17](docs/TESTING.md#17-interlaced-vc-1-decodes-on-the-gpu-0015)),
+here or on the merge request, would let them decode it too.
+
+#### 0018 · VC-1 goes wrong at the bottom edge
+
+On VP3 to VP5 decoders, VC-1 videos whose height is not a multiple of 16,
+1080-line ones included, go wrong at the bottom edge, and the error creeps
+up through the following frames. The decoder was given the height rounded
+up to the next 16 lines; NVIDIA's driver gives it the picture height, and
+so does 0018. At first the error is too small to see, so a third panel
+shows how far the two sides differ, 32 times over. Below, FFmpeg's 240×104
+sample `vc1-wmapro.ism`.
+
+<p align="center">
+  <img src="assets/vc1-height.gif" width="100%"
+       alt="A small sunset scene in three panels. Without 0018 and with 0018 look alike at first; the difference panel fills up from the bottom edge, and late in the clip dark red blotches appear at the bottom of the left panel. Without 0018, 118 of 120 frames differ from software decoding; with 0018, none.">
+</p>
+
+#### 0017 · 10-bit H.264 comes out wrong
+
+nouveau listed H.264 High 10 among its VA-API profiles, although its
+decoders handle 8-bit video only. FFmpeg, and players built on it such as
+mpv, then sent 10-bit H.264 files to the GPU, which decoded every frame
+wrong, instead of decoding them on the CPU. 0017 stops at High profile, so
+these files play on the CPU; 8-bit H.264 still decodes on the GPU. This
+affects every GPU nouveau decodes H.264 on. Below, one of FFmpeg's High 10
+conformance streams.
+
+<p align="center">
+  <img src="assets/h264-high10.gif" width="100%"
+       alt="A terminal. Without 0017: vainfo lists VAProfileH264High10 and all 10 frames of a 10-bit stream differ from software decoding. With 0017: no High10 profile, FFmpeg's hardware setup fails, it decodes the stream in software and all 10 frames match.">
+</p>
 
 #### 0007 · Converted pictures turn green and magenta
 
@@ -328,6 +361,8 @@ H.264 decoding is exact, so a correct decoder differs on no frame.
 | Big Buck Bunny from YouTube, H.264 720p60, 0:50–1:15 | 143 of 1501 frames differ | **none** |
 | Sintel and Tears of Steel from YouTube, H.264 1080p, 25 s each | 13 of 1202 frames differ | **none** |
 | FFmpeg's H.264 conformance streams that VP4 decodes | 2784 frames in 48 of 163 streams differ | **none** |
+| FFmpeg's H.264 High 10 streams PPH10I1 to PPH10I7 | decoded on the GPU, every frame wrong | **decoded on the CPU, none differ** |
+| FFmpeg's interlaced VC-1 streams SA10143 and ilaced_twomv | SA10143: 30 of 30 frames differ; ilaced_twomv can hang the video engine | **none** |
 | Kernel errors during all of the above | `SURF_HEIGHT_OVERRUN` at every video start | **none** |
 | Uniform buffer readbacks, [`tests/ubo-two-contexts.c`](tests/ubo-two-contexts.c): two contexts, one context orphaning its buffer | 40 of 40 and 20 of 20 wrong | **none wrong** |
 | Texture clears with `glClearTexImage`, [`tests/cleartex.c`](tests/cleartex.c): depth and colour | 4083 and 4096 of 4096 texels wrong, `DATA_ERROR` in the kernel log | **none wrong, no kernel errors** |
@@ -337,7 +372,9 @@ or Baseline FMO and ASO, which ffmpeg does not decode through VA-API.
 FFmpeg before 8.0, the one in Ubuntu 24.04 included, decodes one stream
 wrongly, `slice2_field_aurora4` ([ticket 11360](https://trac.ffmpeg.org/ticket/11360)):
 for it the table uses FFmpeg's reference checksums, which the GPU matches
-with and without the patches.
+with and without the patches. The High 10 and interlaced VC-1 rows were
+measured with every patch but 0017 and 0015 on the left; ilaced_twomv hung
+the video engine on 25 November, without 0015.
 
 ## Patches
 
@@ -367,8 +404,10 @@ distributions, their own patches included.
 | [0012](#0012--texture-clears-on-geforce-fx-6-and-7) | nv30: don't read pipe_surface templates as nv30_surface in clears | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
 | [0013](#0001-0013--gpu-errors-at-every-video-start) | nv50,nvc0: clear through a driver surface on the stack | **merged**, [!46135](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/46135) |
 | [0014](#0014--vc-1-simple-and-main-videos-come-out-as-garbage) | nouveau: add a start code to vc1 simple and main pictures | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
-| [0015](#0015--interlaced-vc-1-plays-on-the-cpu) | nouveau: refuse interlaced vc1 pictures on vp3 to vp5 | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0015](#0015--interlaced-vc-1-comes-out-wrong) | nouveau: pick the vc1 microcode for each picture type | an earlier version in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
 | [0016](#0016--gstreamer-warns-about-a-driver-bug) | nouveau: report the size of exported buffers | in review, [!45340](https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/45340) |
+| [0017](#0017--10-bit-h264-comes-out-wrong) | nouveau: don't advertise H.264 High 10, 4:2:2 and 4:4:4 | not submitted yet |
+| [0018](#0018--vc-1-goes-wrong-at-the-bottom-edge) | nouveau: give the vc1 vp the picture height | not submitted yet |
 
 ### Which GPUs need which patches
 
@@ -406,6 +445,8 @@ and 700 models use Fermi or Maxwell chips: check the chipset.
 | 0014 | | | | ✓ | ✓ | ✓ | ✓ | |
 | 0015 | | | | ✓ | ✓ | ✓ | ✓ | |
 | 0016 | | | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| 0017 | | | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| 0018 | | | | ✓ | ✓ | ✓ | ✓ | |
 
 0004 fixes the OpenGL driver of every GeForce 8 to 300 GPU, so it matters
 with or without video decoding; so do 0001 and 0013, for texture clears on
@@ -421,10 +462,13 @@ way, in their own decoder code (`nv84_video_bsp.c`, `nv84_video_vp.c`);
 these patches leave it alone, since there was no VP2 GPU to test them on.
 0011 changes code that every GF100 and later GPU runs, but the frames it
 lets through come from nouveau's video decoder, which Maxwell and later
-lack; it was tested on Kepler. 0014 and 0015 change code that every VP3
-to VP5 decoder shares; they were tested on VP4, on the GT 240M, and the
-part of 0015 for GF100 and later GPUs was only built. 0016 changes code
+lack; it was tested on Kepler. 0014, 0015 and 0018 change code that every
+VP3 to VP5 decoder shares; they were tested on VP4, on the GT 240M. 0015
+decodes interlaced VC-1 only on GT21x for now and refuses it elsewhere,
+and its part for GF100 and later GPUs was only built. 0016 changes code
 every nouveau GPU runs, but only video export reads the size it sets.
+0017 changes the profile list of every GPU nouveau decodes H.264 on, VP2
+included.
 
 On Kepler, Kush Chandak tested all ten patches on a GeForce GT 710
 (GK208B): H.264 and MPEG-2 decode at 1080p, H.264 identical to software
@@ -486,8 +530,10 @@ that is allowed to use VA-API, and fixed GPU clocks.
   tested.
 - **GPU clocks**, below.
 
-These decoders handle H.264, MPEG-2 and VC-1 only, and interlaced VC-1
-plays on the CPU ([0015](#0015--interlaced-vc-1-plays-on-the-cpu)).
+These decoders handle H.264, MPEG-2 and VC-1 only, and 8-bit video only:
+10-bit H.264 plays on the CPU ([0017](#0017--10-bit-h264-comes-out-wrong)).
+Interlaced VC-1 plays on the CPU except on GT21x GPUs
+([0015](#0015--interlaced-vc-1-comes-out-wrong)).
 MPEG-1 and MPEG-4 part 2 (DivX, Xvid) always play on the CPU: VA-API has
 no MPEG-1 profile, and Mesa kept MPEG-4 part 2 off by default until it
 removed it in Mesa 26.0. VP4
@@ -522,8 +568,9 @@ the level at boot avoids both.
 [`docs/TESTING.md`](docs/TESTING.md) lists the checks used for the results
 above: kernel traps, export with mpv, frame comparison with software decoding,
 H.264 conformance, decoders stopped early, conversion to three-plane formats,
-YUYV and UYVY surfaces, monochrome and interlaced H.264, Firefox logs,
-Brave's frame imports and texture clears.
+YUYV and UYVY surfaces, monochrome and interlaced H.264, H.264 High 10,
+VC-1 Simple, Main and interlaced, Firefox logs, Brave's frame imports and
+texture clears.
 
 ## Reporting problems
 

@@ -538,12 +538,13 @@ These decoders handle H.264, MPEG-2 and VC-1 only, and 8-bit video only:
 10-bit H.264 plays on the CPU ([0017](#0017--10-bit-h264-comes-out-wrong)).
 Interlaced VC-1 plays on the CPU except on GT21x and Fermi (GF100–GF116)
 GPUs ([0015](#0015--interlaced-vc-1-comes-out-wrong)). A few VC-1 Simple
-and Main streams still differ from software decoding: at high quantizers
-a near-black sample at a block corner can be off by one, which can't be
-seen; in FFmpeg's SMM0005 some B frames differ near the right edge, the
-same way with NVIDIA's driver; and two old WMV3 samples from before the
-standard lose their P frames, which NVIDIA's driver doesn't decode right
-either.
+and Main streams still differ from software decoding, bit for bit as with
+NVIDIA's driver: at high quantizers a near-black sample at a block corner
+can be off by one, which can't be seen, and in FFmpeg's SMM0005 some B
+frames differ near the right edge. In both cases FFmpeg follows the VC-1
+standard (SMPTE ST 421), so the difference looks like the hardware's.
+Two old WMV3 samples from before the standard lose their P frames, which
+NVIDIA's driver doesn't decode right either.
 MPEG-1 and MPEG-4 part 2 (DivX, Xvid) always play on the CPU: VA-API has
 no MPEG-1 profile, and Mesa kept MPEG-4 part 2 off by default until it
 removed it in Mesa 26.0. VP4
